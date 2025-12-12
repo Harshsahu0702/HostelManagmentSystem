@@ -1,8 +1,16 @@
-import  HostelLoginToggle from './pages/HostelLoginToggle.jsx'
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HostelLoginToggle from "./pages/HostelLoginToggle.jsx";
+import StudentDashboard from "./pages/StudentDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 export default function App() {
   return (
-    <HostelLoginToggle />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HostelLoginToggle />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

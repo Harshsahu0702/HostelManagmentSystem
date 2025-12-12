@@ -5,8 +5,11 @@ import Header from "../components/Header";
 import Hyperspeed from "../components/Hyperspeed";
 import { hyperspeedPresets } from "../components/hyperspeedPresets";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function HostelLoginToggle() {
+  const navigate = useNavigate();
+
   const [mode, setMode] = useState("student");
 
   // State objects to hold credentials separately
@@ -24,7 +27,7 @@ export default function HostelLoginToggle() {
   const handleAdminChange = (e) => {
     const { name, value } = e.target;
     setAdminCreds((prev) => ({ ...prev, [name]: value }));
-    console.log("adminCreds (next):", { ...adminCreds, [name]: value });l
+    console.log("adminCreds (next):", { ...adminCreds, [name]: value });
   };
 
   const handleStudentChange = (e) => {
@@ -35,32 +38,40 @@ export default function HostelLoginToggle() {
 
   // When form submitted, use the state objects (instead of FormData)
 
-const submitHandler = async (e) => {
-  e.preventDefault();
+  const submitHandler = async (e) => {
+    e.preventDefault();
 
-  try {
-    if (mode === "student") {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/student/login",
-        studentCreds
-      );
+    try {
+      if (mode === "student") {
+        const res = await axios.post(
+          "http://localhost:5000/api/auth/student/login",
+          studentCreds
+        );
 
-      console.log(res.data);
-      alert(res.data.message);
+        navigate("/student-dashboard", {
+          state: {
+            sid: studentCreds.sid,
+            password: studentCreds.password,
+          },
+        });
 
-    } else {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/admin/login",
-        adminCreds
-      );
+      } else {
+        const res = await axios.post(
+          "http://localhost:5000/api/auth/admin/login",
+          adminCreds
+        );
+        navigate("/admin-dashboard", {
+          state: {
+            email: adminCreds.email,
+            password: adminCreds.password,
+          },
+        });
 
-      console.log(res.data);
-      alert(res.data.message);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Login failed");
     }
-  } catch (err) {
-    alert(err.response?.data?.message || "Login failed");
-  }
-};
+  };
 
 
   return (
