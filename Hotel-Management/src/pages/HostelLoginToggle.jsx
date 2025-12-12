@@ -4,8 +4,12 @@ import "./HostelLoginToggle.css";
 import Header from "../components/Header";
 import Hyperspeed from "../components/Hyperspeed";
 import { hyperspeedPresets } from "../components/hyperspeedPresets";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function HostelLoginToggle() {
+  const navigate = useNavigate();
+
   const [mode, setMode] = useState("student");
 
   // State objects to hold credentials separately
@@ -23,7 +27,7 @@ export default function HostelLoginToggle() {
   const handleAdminChange = (e) => {
     const { name, value } = e.target;
     setAdminCreds((prev) => ({ ...prev, [name]: value }));
-    console.log("adminCreds (next):", { ...adminCreds, [name]: value });l
+    console.log("adminCreds (next):", { ...adminCreds, [name]: value });
   };
 
   const handleStudentChange = (e) => {
@@ -33,20 +37,42 @@ export default function HostelLoginToggle() {
   };
 
   // When form submitted, use the state objects (instead of FormData)
-  const submitHandler = (e) => {
+
+  const submitHandler = async (e) => {
     e.preventDefault();
 
-    if (mode === "student") {
-      // demo: show student creds (in prod don't alert passwords)
-      alert(`Student login (demo)\nID: ${studentCreds.sid}`);
-      console.log("Student creds submitted:", studentCreds);
-      // here call your API or DB check using studentCreds
-    } else {
-      alert(`Admin login (demo)\nEmail: ${adminCreds.email}`);
-      console.log("Admin creds submitted:", adminCreds);
-      // here call your API or DB check using adminCreds
+    try {
+      if (mode === "student") {
+        const res = await axios.post(
+          "http://localhost:5000/api/auth/student/login",
+          studentCreds
+        );
+
+        navigate("/student-dashboard", {
+          state: {
+            sid: studentCreds.sid,
+            password: studentCreds.password,
+          },
+        });
+
+      } else {
+        const res = await axios.post(
+          "http://localhost:5000/api/auth/admin/login",
+          adminCreds
+        );
+        navigate("/admin-dashboard", {
+          state: {
+            email: adminCreds.email,
+            password: adminCreds.password,
+          },
+        });
+
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Login failed");
     }
   };
+
 
   return (
     <div className="login-container">
