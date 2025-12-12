@@ -4,6 +4,7 @@ import "./HostelLoginToggle.css";
 import Header from "../components/Header";
 import Hyperspeed from "../components/Hyperspeed";
 import { hyperspeedPresets } from "../components/hyperspeedPresets";
+import axios from "axios";
 
 export default function HostelLoginToggle() {
   const [mode, setMode] = useState("student");
@@ -33,20 +34,34 @@ export default function HostelLoginToggle() {
   };
 
   // When form submitted, use the state objects (instead of FormData)
-  const submitHandler = (e) => {
-    e.preventDefault();
 
+const submitHandler = async (e) => {
+  e.preventDefault();
+
+  try {
     if (mode === "student") {
-      // demo: show student creds (in prod don't alert passwords)
-      alert(`Student login (demo)\nID: ${studentCreds.sid}`);
-      console.log("Student creds submitted:", studentCreds);
-      // here call your API or DB check using studentCreds
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/student/login",
+        studentCreds
+      );
+
+      console.log(res.data);
+      alert(res.data.message);
+
     } else {
-      alert(`Admin login (demo)\nEmail: ${adminCreds.email}`);
-      console.log("Admin creds submitted:", adminCreds);
-      // here call your API or DB check using adminCreds
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/admin/login",
+        adminCreds
+      );
+
+      console.log(res.data);
+      alert(res.data.message);
     }
-  };
+  } catch (err) {
+    alert(err.response?.data?.message || "Login failed");
+  }
+};
+
 
   return (
     <div className="login-container">
