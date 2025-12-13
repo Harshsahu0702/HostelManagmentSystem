@@ -1,8 +1,12 @@
-import  HostelLoginToggle from './pages/HostelLoginToggle.jsx'
-import './App.css'
+import HostelLoginToggle from './pages/HostelLoginToggle';
+import './App.css';
 
-export default function App() {
+function App() {
   return (
-    <HostelLoginToggle />
+    <div className="app-container">
+      <HostelLoginToggle />
+    </div>
   );
 }
+
+export default App;

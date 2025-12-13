@@ -1,4 +1,6 @@
 // TaglineCTA.jsx
+import "./TaglineCTA.css";
+
 export default function TaglineCTA(){
   return (
     <section className="tagline-cta-section">
