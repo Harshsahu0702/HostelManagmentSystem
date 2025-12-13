@@ -1,14 +1,29 @@
 /* Full Screen Background Container */
 .login-container {
-  position: fixed;
+  position: absolute;     /* FIXED → ABSOLUTE */
   inset: 0;
-  /* darker blackish gradient for better hyperspeed contrast */
-  background: linear-gradient(180deg, #07060a 0%, #0b0b10 35%, #071018 100%);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
+
+body {
+  background: #07060a;
+}
+
+.hero-section-wrapper {
+  width: 100vw;
+  min-height: 100vh;   /* instead of fixed height */
+  height: auto;        /* allow overflow */
+  position: relative; /* Allows absolute children inside */
+  overflow: visible;   /* Keeps your design intact */
+   background: linear-gradient(180deg, #07060a 0%, #0b0b10 35%, #071018 100%);
+
+}
+
+
 
 /* Floating Blob Animations */
 .blob-left {
@@ -158,6 +173,7 @@
   width: 100%;
   max-width: 300px;
   margin-left: 680px;
+  text-align: center;
 }
 
 .toggle-background {
@@ -220,6 +236,14 @@
   box-shadow: 0 18px 30px -12px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow: hidden;
+  text-align: center;
+}
+
+/* Ensure all direct children of form-card are centered */
+.form-card > * {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 /* Header-with-effect: scope hyperspeed canvas to header area */

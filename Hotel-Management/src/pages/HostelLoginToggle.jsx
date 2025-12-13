@@ -4,6 +4,7 @@ import "./HostelLoginToggle.css";
 import Header from "../components/Header";
 import Hyperspeed from "../components/Hyperspeed";
 import { hyperspeedPresets } from "../components/hyperspeedPresets";
+import WhyChooseSection from "../components/WhyChooseSection";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -75,128 +76,139 @@ export default function HostelLoginToggle() {
 
 
   return (
-    <div className="login-container">
-      {/* Hyperspeed full-screen background */}
-      <div className="hyperspeed-bg">
-        <Hyperspeed effectOptions={hyperspeedPresets.one} />
-      </div>
+  <>
+    {/* HERO + LOGIN SECTION */}
+    <div className="hero-section-wrapper">
 
-      {/* Floating animations */}
-      <div className="blob-left"></div>
-      <div className="blob-right"></div>
-      {/* HEADER */}
-      <Header />
-
-      <div className="login-wrapper">
-        {/* Toggle Buttons */}
-        <div className="toggle-container">
-          <div
-            className={`toggle-background ${mode === "admin" ? "admin" : "student"}`}
-          ></div>
-
-          <div className="toggle-buttons">
-            <button
-              onClick={() => setMode("admin")}
-              className={`toggle-btn ${mode === "admin" ? "active" : "inactive"}`}
-            >
-              Admin
-            </button>
-            <button
-              onClick={() => setMode("student")}
-              className={`toggle-btn ${mode === "student" ? "active" : "inactive"}`}
-            >
-              Student
-            </button>
-          </div>
+      <div className="login-container">
+        {/* BG Animation */}
+        <div className="hyperspeed-bg">
+          <Hyperspeed effectOptions={hyperspeedPresets.one} />
         </div>
 
-        {/* FORM BELOW */}
-        <div className="form-wrapper">
-          <div className="form-card">
-            <h2 className="form-title">Welcome back</h2>
-            <p className="form-subtitle">Sign in to continue</p>
+        {/* FLOATING BLOBS */}
+        <div className="blob-left"></div>
+        <div className="blob-right"></div>
 
-            <AnimatePresence mode="wait">
-              {mode === "student" ? (
-                <motion.form
-                  key="student"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.3 }}
-                  onSubmit={submitHandler}
-                  className="form-student"
-                >
-                  <div className="form-group">
-                    <label className="form-label">Student ID</label>
-                    <input
-                      required
-                      name="sid"
-                      placeholder="eg. S2001"
-                      className="form-input student-focus"
-                      onChange={handleStudentChange}
-                      value={studentCreds.sid}
-                    />
-                  </div>
+        {/* HEADER */}
+        <Header />
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
-                    <input
-                      required
-                      type="password"
-                      name="password"
-                      placeholder="••••••••"
-                      className="form-input student-focus"
-                      onChange={handleStudentChange}
-                      value={studentCreds.password}
-                    />
-                  </div>
+        {/* LOGIN BOX */}
+        <div className="login-wrapper">
+          {/* TOGGLE */}
+          <div className="toggle-container">
+            <div
+              className={`toggle-background ${mode === "admin" ? "admin" : "student"}`}
+            ></div>
 
-                  <button className="submit-btn student">Sign in</button>
-                </motion.form>
-              ) : (
-                <motion.form
-                  key="admin"
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 50 }}
-                  transition={{ duration: 0.3 }}
-                  onSubmit={submitHandler}
-                  className="form-admin"
-                >
-                  <div className="form-group">
-                    <label className="form-label">Admin Email</label>
-                    <input
-                      required
-                      type="email"
-                      name="email"
-                      placeholder="admin@college.edu"
-                      className="form-input admin-focus"
-                      onChange={handleAdminChange}
-                      value={adminCreds.email}
-                    />
-                  </div>
+            <div className="toggle-buttons">
+              <button
+                onClick={() => setMode("admin")}
+                className={`toggle-btn ${mode === "admin" ? "active" : "inactive"}`}
+              >
+                Admin
+              </button>
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
-                    <input
-                      required
-                      type="password"
-                      name="password"
-                      placeholder="••••••••"
-                      className="form-input admin-focus"
-                      onChange={handleAdminChange}
-                      value={adminCreds.password}
-                    />
-                  </div>
+              <button
+                onClick={() => setMode("student")}
+                className={`toggle-btn ${mode === "student" ? "active" : "inactive"}`}
+              >
+                Student
+              </button>
+            </div>
+          </div>
 
-                  <button className="submit-btn admin">Admin Sign in</button>
-                </motion.form>
-              )}
-            </AnimatePresence>
+          {/* LOGIN FORM */}
+          <div className="form-wrapper">
+            <div className="form-card">
+              <h2 className="form-title">Welcome back</h2>
+              <p className="form-subtitle">Sign in to continue</p>
+
+              <AnimatePresence mode="wait">
+                {mode === "student" ? (
+                  <motion.form
+                    key="student"
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.3 }}
+                    onSubmit={submitHandler}
+                  >
+                    <div className="form-group">
+                      <label className="form-label">Student ID</label>
+                      <input
+                        required
+                        name="sid"
+                        placeholder="eg. S2001"
+                        className="form-input student-focus"
+                        onChange={handleStudentChange}
+                        value={studentCreds.sid}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Password</label>
+                      <input
+                        required
+                        type="password"
+                        name="password"
+                        placeholder="••••••••"
+                        className="form-input student-focus"
+                        onChange={handleStudentChange}
+                        value={studentCreds.password}
+                      />
+                    </div>
+
+                    <button className="submit-btn student">Sign in</button>
+                  </motion.form>
+                ) : (
+                  <motion.form
+                    key="admin"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 50 }}
+                    transition={{ duration: 0.3 }}
+                    onSubmit={submitHandler}
+                  >
+                    <div className="form-group">
+                      <label className="form-label">Admin Email</label>
+                      <input
+                        required
+                        type="email"
+                        name="email"
+                        placeholder="admin@college.edu"
+                        className="form-input admin-focus"
+                        onChange={handleAdminChange}
+                        value={adminCreds.email}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Password</label>
+                      <input
+                        required
+                        type="password"
+                        name="password"
+                        placeholder="••••••••"
+                        className="form-input admin-focus"
+                        onChange={handleAdminChange}
+                        value={adminCreds.password}
+                      />
+                    </div>
+
+                    <button className="submit-btn admin">Admin Sign in</button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  );
+
+    {/* SCROLL → WHY CHOOSE HOSTEL-HUB SECTION (CURVED TOP) */}
+    <WhyChooseSection />
+  </>
+);
+
 }
