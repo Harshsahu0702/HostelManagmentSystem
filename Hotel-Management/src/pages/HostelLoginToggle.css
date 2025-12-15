@@ -68,9 +68,14 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 840px;
-  padding: 0 28px;
-  
+  max-width: 1400px;
+  min-height: 100vh;
+  padding: 0 40px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 /* Header: larger, more prominent, compact spacing */
@@ -169,11 +174,12 @@ body {
   padding: 4px;
   border-radius: 10px;
   position: relative;
-  margin: 0 auto;
+  margin: 0 auto 20px;
   width: 100%;
   max-width: 300px;
-  margin-left: 680px;
   text-align: center;
+  align-self: flex-end;
+  margin-right: 110px;
 }
 
 .toggle-background {
@@ -222,21 +228,27 @@ body {
 
 /* Form Card */
 .form-wrapper {
-  width: 70%;
-  margin-top: 12px;
-  margin-left: 550px;
+  width: 100%;
+  max-width: 480px;
+  margin: 12px 20px 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  position: relative;
+  right: 0;
 }
 
 .form-card {
-  background: rgba(0, 0, 0, 0.45); /* darker card so animation looks good */
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  padding: 20px;
+  padding: 32px;
   box-shadow: 0 18px 30px -12px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow: hidden;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Ensure all direct children of form-card are centered */

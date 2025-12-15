@@ -5,7 +5,7 @@
   right: auto;             /* do not stretch horizontally */
   width: auto;             /* keep intrinsic width (content-based) */
   padding: 0;              /* we will control spacing inside .header-content */
-  z-index: 30;             /* sits above background but below interactive modals if needed */
+  z-index: 1;             /* sits above background but below interactive modals if needed */
   background: transparent; /* NO dark box */
   box-shadow: none;
   pointer-events: none;    /* allow clicks to pass through empty areas */

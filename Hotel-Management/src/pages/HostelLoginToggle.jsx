@@ -7,6 +7,7 @@ import { hyperspeedPresets } from "../components/hyperspeedPresets";
 import WhyChooseSection from "../components/WhyChooseSection";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import HostelButton from "../components/HostelButton"
 
 export default function HostelLoginToggle() {
   const navigate = useNavigate();
@@ -79,9 +80,11 @@ export default function HostelLoginToggle() {
 
         {/* HEADER */}
         <Header />
+        
 
         {/* LOGIN BOX */}
         <div className="login-wrapper">
+          
           {/* TOGGLE */}
           <div className="toggle-container">
             <div
@@ -179,14 +182,21 @@ export default function HostelLoginToggle() {
                       />
                     </div>
 
+
                     <button className="submit-btn admin">Admin Sign in</button>
                   </motion.form>
+                  
                 )}
+                
               </AnimatePresence>
             </div>
+            
           </div>
+          <HostelButton />
         </div>
+        
       </div>
+      
     </div>
 
     {/* SCROLL → WHY CHOOSE HOSTEL-HUB SECTION (CURVED TOP) */}

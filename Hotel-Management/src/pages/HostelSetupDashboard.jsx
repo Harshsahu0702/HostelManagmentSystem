@@ -209,35 +209,9 @@ const HostelSetupDashboard = () => {
     if (activeStep > 1) setActiveStep(prev => prev - 1);
   };
 
-  const completeSetup = async () => {
-    try {
-      // Send setup configuration to backend
-      const resp = await fetch('/api/setup/hostel-setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hostelName: formData.hostelName,
-          adminName: formData.adminName,
-          adminEmail: formData.adminEmail,
-          adminPassword: formData.adminPassword,
-          buildings: formData.buildings,
-          roomTypes: formData.roomTypes
-        })
-      });
-
-      const data = await resp.json();
-      if (!resp.ok) {
-        console.error('Setup failed:', data);
-        alert(data.message || 'Setup failed');
-        return;
-      }
-
-      console.log('Setup success:', data);
-      setIsCompleted(true);
-    } catch (err) {
-      console.error('Network error during setup:', err);
-      alert('Network error while submitting setup.');
-    }
+  const completeSetup = () => {
+    setIsCompleted(true);
+    console.log("Setup Data Submitted:", formData);
   };
 
   // --- Render Steps ---
@@ -984,6 +958,7 @@ body {
   color: var(--text-main);
 }
 
+input, select, textarea,
 .form-input, .form-select, .form-textarea {
   padding: 10px 14px;
   border: 1px solid var(--border);
@@ -992,6 +967,14 @@ body {
   outline: none;
   transition: border-color 0.2s;
   width: 100%;
+  color: #000000;
+}
+
+input::placeholder,
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #666666;
+  opacity: 1; /* Firefox */
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
