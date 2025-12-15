@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./HostelLoginToggle.css";
 import Header from "../components/Header";
@@ -10,40 +10,23 @@ import { useNavigate } from "react-router-dom";
 
 export default function HostelLoginToggle() {
   const navigate = useNavigate();
-
   const [mode, setMode] = useState("student");
-
-  // State objects to hold credentials separately
-  const [adminCreds, setAdminCreds] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [studentCreds, setStudentCreds] = useState({
-    sid: "",
-    password: "",
-  });
-
-  // Handlers to update state as user types
-  const handleAdminChange = (e) => {
-    const { name, value } = e.target;
-    setAdminCreds((prev) => ({ ...prev, [name]: value }));
-    console.log("adminCreds (next):", { ...adminCreds, [name]: value });
-  };
-
-  const handleStudentChange = (e) => {
-    const { name, value } = e.target;
-    setStudentCreds((prev) => ({ ...prev, [name]: value }));
-    console.log("studentCreds (next):", { ...studentCreds, [name]: value });
-  };
-
-  // When form submitted, use the state objects (instead of FormData)
+  
+  // Refs for form inputs
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const sidRef = useRef(null);
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
     try {
       if (mode === "student") {
+        const studentCreds = {
+          sid: sidRef.current.value,
+          password: passwordRef.current.value,
+        };
+
         const res = await axios.post(
           "http://localhost:5000/api/auth/student/login",
           studentCreds
@@ -55,19 +38,23 @@ export default function HostelLoginToggle() {
             password: studentCreds.password,
           },
         });
-
       } else {
+        const adminCreds = {
+          email: emailRef.current.value,
+          password: passwordRef.current.value,
+        };
+
         const res = await axios.post(
           "http://localhost:5000/api/auth/admin/login",
           adminCreds
         );
+        
         navigate("/admin-dashboard", {
           state: {
             email: adminCreds.email,
             password: adminCreds.password,
           },
         });
-
       }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
@@ -139,10 +126,9 @@ export default function HostelLoginToggle() {
                       <input
                         required
                         name="sid"
+                        ref={sidRef}
                         placeholder="eg. S2001"
                         className="form-input student-focus"
-                        onChange={handleStudentChange}
-                        value={studentCreds.sid}
                       />
                     </div>
 
@@ -152,10 +138,9 @@ export default function HostelLoginToggle() {
                         required
                         type="password"
                         name="password"
+                        ref={passwordRef}
                         placeholder="••••••••"
                         className="form-input student-focus"
-                        onChange={handleStudentChange}
-                        value={studentCreds.password}
                       />
                     </div>
 
@@ -176,10 +161,9 @@ export default function HostelLoginToggle() {
                         required
                         type="email"
                         name="email"
+                        ref={emailRef}
                         placeholder="admin@college.edu"
                         className="form-input admin-focus"
-                        onChange={handleAdminChange}
-                        value={adminCreds.email}
                       />
                     </div>
 
@@ -189,10 +173,9 @@ export default function HostelLoginToggle() {
                         required
                         type="password"
                         name="password"
+                        ref={passwordRef}
                         placeholder="••••••••"
                         className="form-input admin-focus"
-                        onChange={handleAdminChange}
-                        value={adminCreds.password}
                       />
                     </div>
 
