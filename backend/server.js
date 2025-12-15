@@ -9,9 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // IMPORTANT for reading JSON body
 const authRoutes = require("./routes/authRoutes");
+const setupRoutes = require("./routes/setupRoutes");
 
 // routes
 app.use("/api/auth", authRoutes);
+app.use("/api/setup", setupRoutes);
 
 // DB
 const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/hostel-management";
