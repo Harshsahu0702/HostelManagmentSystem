@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 // --- Internal SVG Icon Components for Zero-Dependency ---
 const Icons = {
@@ -194,33 +197,41 @@ const HostelSetupDashboard = () => {
         return true;
     }
   };
-
-  const nextStep = () => {
-    if (activeStep < totalSteps) {
-      if (validateStep(activeStep)) {
-        setValidationError(''); // Clear error on success
-        setActiveStep(prev => prev + 1);
-      } else {
-        // Explicit UI Red Alert for validation errors
-        if (activeStep === 2 && formData.adminPassword !== formData.adminConfirmPassword) {
-          setValidationError("Passwords do not match!");
-        } else {
-          setValidationError("All fields must be filled before going for the next step.");
-        }
+//navigation handelers
+const nextStep = async () => {
+  try {
+    await axios.post(
+      "http://localhost:5000/api/hostel-setup/save-draft",
+      {
+        step: activeStep,
+        data: formData,
       }
-    }
-  };
+    );
+    if (activeStep < 6) setActiveStep(prev => prev + 1);
+  } catch (err) {
+    console.error("Draft save failed", err);
+  }
+};
 
   const prevStep = () => {
     setValidationError(''); // Clear error on navigation
     if (activeStep > 1) setActiveStep(prev => prev - 1);
   };
 
-  const completeSetup = () => {
-    setIsCompleted(true);
-    console.log("Setup Data Submitted:", formData);
-  };
+ const completeSetup = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/hostel-setup/complete",
+      { data: formData }
+    );
 
+    console.log("Server Response:", res.data);
+    setIsCompleted(true);
+  } catch (error) {
+    console.error("Setup failed:", error);
+    alert("Failed to save hostel setup");
+  }
+};
   // --- Render Steps ---
   const renderStepContent = () => {
     switch(activeStep) {
@@ -494,6 +505,7 @@ const HostelSetupDashboard = () => {
     { id: 5, label: 'Mess', icon: Icons.Utensils },
     { id: 6, label: 'Review', icon: Icons.Check },
   ];
+  const navigate = useNavigate();
 
   if (isCompleted) {
     return (
@@ -503,7 +515,12 @@ const HostelSetupDashboard = () => {
           <div className="success-icon"><Icons.Check /></div>
           <h1>Setup Complete!</h1>
           <p>Your hostel management system is now ready to use.</p>
-          <button className="btn-primary" onClick={() => window.location.reload()}>Go to Dashboard</button>
+          <button
+  className="btn-primary"
+  onClick={() => navigate("/")}
+>
+  Go to Dashboard
+</button>
         </div>
       </div>
     );
