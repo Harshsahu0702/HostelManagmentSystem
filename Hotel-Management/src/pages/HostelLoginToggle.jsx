@@ -8,6 +8,7 @@ import WhyChooseSection from "../components/WhyChooseSection";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import HostelButton from "../components/HostelButton"
+import Contact from "../components/Contact";
 
 export default function HostelLoginToggle() {
   const navigate = useNavigate();
@@ -193,6 +194,7 @@ export default function HostelLoginToggle() {
             
           </div>
           <HostelButton />
+          <Contact />
         </div>
         
       </div>
