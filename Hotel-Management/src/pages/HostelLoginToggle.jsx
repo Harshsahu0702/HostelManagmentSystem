@@ -9,6 +9,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import HostelButton from "../components/HostelButton"
 import Contact from "../components/Contact";
+import ScrollIndicator from "../components/ScrollIndicator";
 
 export default function HostelLoginToggle() {
   const navigate = useNavigate();
@@ -84,7 +85,8 @@ export default function HostelLoginToggle() {
         
 
         {/* LOGIN BOX */}
-        <div className="login-wrapper">
+        <div className="login-wrapper" style={{ position: 'relative' }}>
+          <ScrollIndicator />
           
           {/* TOGGLE */}
           <div className="toggle-container">
