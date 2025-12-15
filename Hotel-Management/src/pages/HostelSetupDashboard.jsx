@@ -6,9 +6,7 @@ const Icons = {
   User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
   Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22"></line><line x1="15" y1="22" x2="15" y2="22"></line><line x1="12" y1="22" x2="12" y2="22"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>,
   Grid: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>,
-  Bed: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path><path d="M12 4v6"></path><path d="M2 18h20"></path></svg>,
   Zap: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>,
-  Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>,
   Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
   Plus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
   Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
@@ -16,12 +14,14 @@ const Icons = {
   ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
   Bell: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>,
   Save: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>,
-  Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+  Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
+  Utensils: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path></svg>
 };
 
 const HostelSetupDashboard = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [validationError, setValidationError] = useState(''); // State for Red Alert
 
   // --- Central State Management ---
   const [formData, setFormData] = useState({
@@ -46,35 +46,35 @@ const HostelSetupDashboard = () => {
     // Step 4: Room Matrix (Generated)
     generatedRooms: [], 
 
-    // Step 5: Room Types (Configuration)
+    // Internal reference for dropdowns
     roomTypes: {
-      single: { active: true, fee: '', capacity: 1, bathroom: false, ac: false, furniture: [] },
-      double: { active: true, fee: '', capacity: 2, bathroom: false, ac: false, furniture: [] },
-      triple: { active: true, fee: '', capacity: 3, bathroom: false, ac: false, furniture: [] },
-      dormitory: { active: true, fee: '', capacity: 6, bathroom: false, ac: false, furniture: [] },
+      single: { capacity: 1 },
+      double: { capacity: 2 },
+      triple: { capacity: 3 },
+      dormitory: { capacity: 6 },
     },
 
-    // Step 6: Mess & Utilities
+    // Step 5: Mess
     messAvailable: true,
-    electricityIncluded: false,
-    waterSupply: '24hrs',
-    powerBackup: true,
-
-    // Step 7: Rules
-    checkInTime: '22:00',
-    checkOutTime: '06:00',
-    visitorPolicy: 'Weekends Only',
-    lateNightPolicy: 'With Prior Permission',
-    rulesText: '',
   });
 
   // --- Logic to Generate Rooms Table ---
   useEffect(() => {
-    // Only generate if we are on Step 4 and list is empty
+    // Generate only if on Room Matrix step (now Step 4) and list is empty
     if (activeStep === 4 && formData.generatedRooms.length === 0) {
       regenerateRooms();
     }
   }, [activeStep]);
+
+  // --- Auto-dismiss Alert Effect ---
+  useEffect(() => {
+    if (validationError) {
+      const timer = setTimeout(() => {
+        setValidationError('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [validationError]);
 
   const regenerateRooms = () => {
     const newRooms = [];
@@ -110,7 +110,7 @@ const HostelSetupDashboard = () => {
       generatedRooms: prev.generatedRooms.map(room => {
         if (room.id === id) {
           const updatedRoom = { ...room, [field]: value };
-          // If type changes, auto-update capacity based on Room Types config
+          // If type changes, auto-update capacity based on default map
           if (field === 'type') {
             updatedRoom.capacity = prev.roomTypes[value]?.capacity || 0;
           }
@@ -129,7 +129,6 @@ const HostelSetupDashboard = () => {
   };
 
   const saveRoomConfiguration = () => {
-    // Logic to categorize rooms (simulated save)
     const validRooms = formData.generatedRooms.filter(r => r.active);
     console.log("Saving Configuration...", {
       total: validRooms.length,
@@ -139,7 +138,7 @@ const HostelSetupDashboard = () => {
     alert(`Configuration Saved! ${validRooms.length} active rooms configured.`);
   };
 
-  // --- Existing Helper Functions ---
+  // --- Helper Functions ---
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -168,44 +167,52 @@ const HostelSetupDashboard = () => {
     }
   };
 
-  const toggleRoomType = (type) => {
-    setFormData(prev => ({
-      ...prev,
-      roomTypes: {
-        ...prev.roomTypes,
-        [type]: { ...prev.roomTypes[type], active: !prev.roomTypes[type].active }
-      }
-    }));
+  // --- Validation & Navigation Handlers ---
+  const totalSteps = 6;
+
+  const validateStep = (step) => {
+    switch(step) {
+      case 1:
+        return formData.hostelName.trim() !== '' && 
+               formData.hostelAddress.trim() !== '' && 
+               formData.hostelContact.trim() !== '' && 
+               formData.hostelEmail.trim() !== '';
+      case 2:
+        return formData.adminName.trim() !== '' && 
+               formData.adminEmail.trim() !== '' && 
+               formData.adminPassword.trim() !== '' && 
+               formData.adminConfirmPassword.trim() !== '' &&
+               formData.adminPassword === formData.adminConfirmPassword;
+      case 3:
+        return formData.buildings.length > 0 && 
+               formData.buildings.every(b => b.name.trim() !== '' && b.floors > 0 && b.roomsPerFloor > 0);
+      case 4:
+        return formData.generatedRooms.length > 0;
+      case 5:
+        return true; // Checkbox only, safe to proceed
+      default:
+        return true;
+    }
   };
 
-  const updateRoomTypeData = (type, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      roomTypes: {
-        ...prev.roomTypes,
-        [type]: { ...prev.roomTypes[type], [field]: value }
-      }
-    }));
-  };
-
-  const toggleFurniture = (type, item) => {
-    const currentList = formData.roomTypes[type].furniture;
-    const newList = currentList.includes(item) 
-      ? currentList.filter(i => i !== item)
-      : [...currentList, item];
-    updateRoomTypeData(type, 'furniture', newList);
-  };
-
-  const calculateTotalRooms = () => {
-    return formData.buildings.reduce((acc, curr) => acc + (curr.floors * curr.roomsPerFloor), 0);
-  };
-
-  // --- Navigation Handlers ---
   const nextStep = () => {
-    if (activeStep < 8) setActiveStep(prev => prev + 1);
+    if (activeStep < totalSteps) {
+      if (validateStep(activeStep)) {
+        setValidationError(''); // Clear error on success
+        setActiveStep(prev => prev + 1);
+      } else {
+        // Explicit UI Red Alert for validation errors
+        if (activeStep === 2 && formData.adminPassword !== formData.adminConfirmPassword) {
+          setValidationError("Passwords do not match!");
+        } else {
+          setValidationError("All fields must be filled before going for the next step.");
+        }
+      }
+    }
   };
 
   const prevStep = () => {
+    setValidationError(''); // Clear error on navigation
     if (activeStep > 1) setActiveStep(prev => prev - 1);
   };
 
@@ -322,7 +329,6 @@ const HostelSetupDashboard = () => {
         );
 
       case 4:
-        // --- UPDATED ROOM MATRIX VIEW ---
         return (
           <div className="step-container fade-in full-width-step">
             <div className="step-header-row">
@@ -421,71 +427,18 @@ const HostelSetupDashboard = () => {
         );
 
       case 5:
+        // Formerly Step 6, now Step 5. Removed Electricity and Water.
         return (
           <div className="step-container fade-in">
-            <h2 className="step-title">Room Types & Facilities</h2>
-            <p className="step-subtitle">Configure pricing and amenities for each room category.</p>
-            <div className="room-types-grid">
-              {Object.keys(formData.roomTypes).map(type => (
-                <div key={type} className={`room-type-card ${formData.roomTypes[type].active ? 'active' : ''}`}>
-                  <div className="rt-header">
-                    <input 
-                      type="checkbox" 
-                      checked={formData.roomTypes[type].active} 
-                      onChange={() => toggleRoomType(type)}
-                      className="checkbox-custom"
-                    />
-                    <h3 className="rt-title">{type.charAt(0).toUpperCase() + type.slice(1)} Occupancy</h3>
-                  </div>
-                  
-                  {formData.roomTypes[type].active && (
-                    <div className="rt-content fade-in">
-                      <div className="form-group small">
-                        <label className="form-label">Monthly Fee (₹)</label>
-                        <input type="number" className="form-input" placeholder="0" value={formData.roomTypes[type].fee} onChange={(e) => updateRoomTypeData(type, 'fee', e.target.value)} />
-                      </div>
-                      
-                      <div className="rt-toggles">
-                        <label className="checkbox-wrapper">
-                          <input type="checkbox" checked={formData.roomTypes[type].ac} onChange={(e) => updateRoomTypeData(type, 'ac', e.target.checked)} />
-                          <span>AC</span>
-                        </label>
-                        <label className="checkbox-wrapper">
-                          <input type="checkbox" checked={formData.roomTypes[type].bathroom} onChange={(e) => updateRoomTypeData(type, 'bathroom', e.target.checked)} />
-                          <span>Attached Washroom</span>
-                        </label>
-                      </div>
-
-                      <div className="rt-furniture">
-                        <span className="label-mini">Furniture:</span>
-                        <div className="furniture-tags">
-                          {['Bed', 'Table', 'Fan', 'Light', 'Almirah'].map(item => (
-                            <span key={item} className={`tag ${formData.roomTypes[type].furniture.includes(item) ? 'selected' : ''}`} onClick={() => toggleFurniture(type, item)}>
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="step-container fade-in">
-            <h2 className="step-title">Mess & Utilities</h2>
-            <p className="step-subtitle">Manage essential services for residents.</p>
+            <h2 className="step-title">Mess Facility</h2>
+            <p className="step-subtitle">Configure food and dining options.</p>
             <div className="settings-list">
               <div className="setting-card">
                 <div className="setting-header">
-                  <div className="setting-icon"><Icons.Zap /></div>
+                  <div className="setting-icon"><Icons.Utensils /></div>
                   <div className="setting-details">
-                    <h4>Mess Facility</h4>
-                    <p>Is food included in the hostel package?</p>
+                    <h4>Mess Facility Available</h4>
+                    <p>Enable if the hostel provides food services to residents.</p>
                   </div>
                   <div className="toggle-switch">
                     <input type="checkbox" id="mess" checked={formData.messAvailable} onChange={(e) => handleInputChange('messAvailable', e.target.checked)} />
@@ -493,65 +446,12 @@ const HostelSetupDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="setting-card">
-                <div className="setting-header">
-                  <div className="setting-icon"><Icons.Zap /></div>
-                  <div className="setting-details">
-                    <h4>Electricity Bill</h4>
-                    <p>Is electricity usage included in rent?</p>
-                  </div>
-                  <div className="toggle-switch">
-                    <input type="checkbox" id="elec" checked={formData.electricityIncluded} onChange={(e) => handleInputChange('electricityIncluded', e.target.checked)} />
-                    <label htmlFor="elec" className="toggle-label"></label>
-                  </div>
-                </div>
-              </div>
-              <div className="form-grid">
-                <div className="form-group full-width">
-                  <label className="form-label">Water Supply Schedule</label>
-                  <select className="form-select" value={formData.waterSupply} onChange={(e) => handleInputChange('waterSupply', e.target.value)}>
-                    <option value="24hrs">24 Hours</option>
-                    <option value="Morning-Evening">Morning & Evening Only</option>
-                    <option value="Scheduled">Specific Hours</option>
-                  </select>
-                </div>
-              </div>
             </div>
           </div>
         );
 
-      case 7:
-        return (
-          <div className="step-container fade-in">
-            <h2 className="step-title">Rules & Policies</h2>
-            <p className="step-subtitle">Define hostel timings and regulations.</p>
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Gate Opening Time</label>
-                <input type="time" className="form-input" value={formData.checkOutTime} onChange={(e) => handleInputChange('checkOutTime', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Gate Closing Time</label>
-                <input type="time" className="form-input" value={formData.checkInTime} onChange={(e) => handleInputChange('checkInTime', e.target.value)} />
-              </div>
-              <div className="form-group full-width">
-                <label className="form-label">Visitor Policy</label>
-                <select className="form-select" value={formData.visitorPolicy} onChange={(e) => handleInputChange('visitorPolicy', e.target.value)}>
-                  <option>No Visitors Allowed</option>
-                  <option>Parents Only</option>
-                  <option>Weekends Only</option>
-                  <option>Allowed Daily (9AM - 6PM)</option>
-                </select>
-              </div>
-              <div className="form-group full-width">
-                <label className="form-label">General Rules</label>
-                <textarea className="form-textarea" rows="5" placeholder="Enter list of rules here..." value={formData.rulesText} onChange={(e) => handleInputChange('rulesText', e.target.value)}></textarea>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 8:
+      case 6:
+        // Formerly Step 8, now Step 6. Removed Rules and Policy checks.
         return (
           <div className="step-container fade-in">
             <h2 className="step-title">Review & Finish</h2>
@@ -569,9 +469,8 @@ const HostelSetupDashboard = () => {
                 <div className="summary-row"><span>Total Active Rooms:</span> <strong>{formData.generatedRooms.filter(r => r.active).length}</strong></div>
               </div>
               <div className="summary-section">
-                <h3>Policies</h3>
-                <div className="summary-row"><span>Curfew:</span> <strong>{formData.checkInTime} - {formData.checkOutTime}</strong></div>
-                <div className="summary-row"><span>Mess:</span> <strong>{formData.messAvailable ? 'Included' : 'Not Included'}</strong></div>
+                <h3>Facilities</h3>
+                <div className="summary-row"><span>Mess Facility:</span> <strong>{formData.messAvailable ? 'Available' : 'Not Available'}</strong></div>
               </div>
             </div>
             <div className="final-action">
@@ -592,10 +491,8 @@ const HostelSetupDashboard = () => {
     { id: 2, label: 'Admin Auth', icon: Icons.User },
     { id: 3, label: 'Buildings', icon: Icons.Building },
     { id: 4, label: 'Room Matrix', icon: Icons.Grid },
-    { id: 5, label: 'Room Types', icon: Icons.Bed },
-    { id: 6, label: 'Mess & Util', icon: Icons.Zap },
-    { id: 7, label: 'Rules', icon: Icons.Book },
-    { id: 8, label: 'Review', icon: Icons.Check },
+    { id: 5, label: 'Mess', icon: Icons.Utensils },
+    { id: 6, label: 'Review', icon: Icons.Check },
   ];
 
   if (isCompleted) {
@@ -629,7 +526,7 @@ const HostelSetupDashboard = () => {
             <div 
               key={step.id} 
               className={`step-item ${activeStep === step.id ? 'active' : ''} ${activeStep > step.id ? 'completed' : ''}`}
-              onClick={() => setActiveStep(step.id)}
+              // Sidebar navigation disabled
             >
               <div className="step-indicator">
                 {activeStep > step.id ? <Icons.Check /> : <step.icon />}
@@ -670,11 +567,18 @@ const HostelSetupDashboard = () => {
             <Icons.ChevronLeft /> Back
           </button>
           
-          <div className="step-counter">
-            Step {activeStep} of 8
+          <div className="footer-center">
+            {validationError && (
+              <div className="red-alert">
+                {validationError}
+              </div>
+            )}
+            <div className="step-counter">
+              Step {activeStep} of {totalSteps}
+            </div>
           </div>
           
-          {activeStep < 8 && (
+          {activeStep < totalSteps && (
             <button className="btn-primary" onClick={nextStep}>
               Next Step <Icons.ChevronRight />
             </button>
@@ -769,7 +673,7 @@ body {
   padding: 12px;
   margin-bottom: 4px;
   border-radius: var(--radius);
-  cursor: pointer;
+  cursor: default; /* Disabled pointer */
   transition: all 0.2s;
   color: var(--text-light);
 }
@@ -892,6 +796,26 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
+}
+
+.footer-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.red-alert {
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 /* Steps General */
@@ -1368,79 +1292,6 @@ input:checked + .toggle-label {
 
 input:checked + .toggle-label:before {
   transform: translateX(24px);
-}
-
-/* Room Types */
-.room-types-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.room-type-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  transition: all 0.2s;
-}
-
-.room-type-card.active {
-  border-color: var(--primary);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-}
-
-.rt-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.checkbox-custom {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
-}
-
-.rt-content {
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
-}
-
-.rt-toggles {
-  display: flex;
-  gap: 16px;
-  margin: 12px 0;
-}
-
-.checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
-}
-
-.furniture-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.tag {
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  background: var(--secondary-bg);
-  border-radius: 12px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.tag.selected {
-  background: #DCFCE7;
-  color: #166534;
-  border-color: #86EFAC;
 }
 
 /* Review */
