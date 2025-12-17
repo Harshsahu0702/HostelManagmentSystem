@@ -1,24 +1,27 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import HostelLoginToggle from "./pages/HostelLoginToggle.jsx";
-import StudentDashboard from "./pages/StudentDashboard.jsx";
+import StudentPanel from "./StudentPanel/StudentPanel.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
-// ...existing code...
 import HostelSetupDashboard from "./pages/HostelSetupDashboard.jsx";
-// ...existing code...
+
 import "./App.css";
 
 function App() {
   return (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<HostelLoginToggle />} />
-      <Route path="/student-dashboard" element={<StudentDashboard />} />
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      <Route path="/hostel-setup" element={<HostelSetupDashboard />} />
-      <Route path="/hostel-setup" element={<HostelSetupDashboard />} />
-    </Routes>
-  </BrowserRouter>
-);
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HostelLoginToggle />} />
+
+        {/* STUDENT PANEL */}
+        <Route path="/student-Panel" element={<StudentPanel />} />
+
+        {/* ADMIN */}
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/hostel-setup" element={<HostelSetupDashboard />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
