@@ -1,3 +1,5 @@
+import StudentDetailsModal from "./StudentDetailsModal";
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -52,9 +54,36 @@ const MOCK_ALLOTMENT = [
 ];
 
 const MOCK_CREDENTIALS = [
-  { id: 'ST-2023-001', name: 'John Doe', lastLogin: '2 hrs ago', status: 'Active' },
-  { id: 'ST-2023-002', name: 'Jane Smith', lastLogin: '1 day ago', status: 'Active' },
-  { id: 'ST-2023-003', name: 'Mike Johnson', lastLogin: 'Never', status: 'Locked' },
+  { 
+    id: 'ST-2023-001', 
+    name: 'John Doe', 
+    room: 'A-101',
+    guardian: 'Robert Doe',
+    year: '2nd',
+    lastLogin: '2 hrs ago', 
+    status: 'Active',
+    details: 'Additional details about John Doe including contact information and emergency contacts.'
+  },
+  { 
+    id: 'ST-2023-002', 
+    name: 'Jane Smith', 
+    room: 'B-204',
+    guardian: 'Mary Smith',
+    year: '3rd',
+    lastLogin: '1 day ago', 
+    status: 'Active',
+    details: 'Additional details about Jane Smith including contact information and emergency contacts.'
+  },
+  { 
+    id: 'ST-2023-003', 
+    name: 'Mike Johnson', 
+    room: 'C-305',
+    guardian: 'David Johnson',
+    year: '1st',
+    lastLogin: 'Never', 
+    status: 'Locked',
+    details: 'Additional details about Mike Johnson including contact information and emergency contacts.'
+  },
 ];
 
 const MOCK_ISSUES = [
@@ -663,7 +692,7 @@ const Badge = ({ type }) => (
 );
 // --- Views ---
 
-const DashboardView = () => {
+const DashboardView = ({ setActiveTab }) => {
   const [roomStats, setRoomStats] = useState({ totalRooms: 0, occupiedRooms: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -693,9 +722,54 @@ const DashboardView = () => {
     },
     ...MOCK_STATS.slice(2)
   ];
+
   return (
     <div>
-      <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
+        <button 
+          onClick={() => setActiveTab('registration')}
+          style={{
+            background: 'linear-gradient(45deg, #4f46e5, #7c3aed)',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
+            fontWeight: 600,
+            fontSize: '1rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)';
+          }}
+        >
+          <UserPlus size={20} />
+          <span>Register New Student</span>
+          <span style={{
+            position: 'absolute',
+            background: 'rgba(255, 255, 255, 0.2)',
+            width: '100px',
+            height: '100%',
+            left: '-120%',
+            top: 0,
+            transform: 'skewX(-15deg)',
+            transition: '0.5s',
+            pointerEvents: 'none'
+          }} className="shine"></span>
+        </button>
+      </div>
       <div className="grid-4" style={{ marginBottom: '2rem' }}>
         {stats.map((stat, idx) => (
           <StatCard 
@@ -756,83 +830,6 @@ const DashboardView = () => {
     </div>
   );
 };
-const HostelSetupView = () => {
-  const [rooms, setRooms] = useState(MOCK_ROOM_TYPES);
-
-  return (
-    <div>
-      <SectionHeader title="Hostel Setup" subtitle="Manage room types and capacities" />
-      
-      <div className="grid-3 grid-3-sidebar">
-        {/* Form */}
-        <div className="card" style={{ height: 'fit-content' }}>
-          <div className="card-padding">
-            <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>Add Room Configuration</h3>
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="form-group">
-                <label className="form-label">Room Type Name</label>
-                <input type="text" className="form-input" placeholder="e.g. Single Luxury" />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label className="form-label">Capacity</label>
-                  <input type="number" className="form-input" placeholder="1" />
-                </div>
-                <div>
-                  <label className="form-label">Total Rooms</label>
-                  <input type="number" className="form-input" placeholder="10" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Fees (Per Year)</label>
-                <input type="number" className="form-input" placeholder="0.00" />
-              </div>
-              <button className="btn-primary">
-                Add Configuration
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* List */}
-        <div className="card">
-          <div className="card-padding" style={{ borderBottom: '1px solid var(--border-color)' }}>
-            <h3 style={{ fontWeight: 600 }}>Current Configurations</h3>
-          </div>
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Capacity</th>
-                  <th>Total Rooms</th>
-                  <th>Fees</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rooms.map((room) => (
-                  <tr key={room.id}>
-                    <td style={{ fontWeight: 500 }}>{room.type}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{room.capacity} Student(s)</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{room.count}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>${room.price}</td>
-                    <td className="text-right">
-                      <button className="action-btn" style={{ color: '#ef4444' }}>
-                        <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const RoomAllotmentView = () => (
   <div>
     <SectionHeader title="Room Allotment" subtitle="Manage student room assignments" />
@@ -924,8 +921,38 @@ const StudentRegistrationView = () => (
           </div>
         </div>
 
+        <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Guardian Information</h3>
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
+            <div className="form-group">
+              <label className="form-label">Guardian's Full Name</label>
+              <input type="text" className="form-input" placeholder="Guardian's name" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Relationship with Student</label>
+              <select className="form-select">
+                <option>Father</option>
+                <option>Mother</option>
+                <option>Brother</option>
+                <option>Sister</option>
+                <option>Guardian</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input type="email" className="form-input" placeholder="guardian@example.com" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Mobile Number</label>
+              <input type="tel" className="form-input" placeholder="+1 234 567 890" />
+            </div>
+          </div>
+        </div>
+
         <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <label className="form-label">Hostel Preference</label>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Hostel Preference</h3>
+          <label className="form-label">Preferred Room Type</label>
           <div className="grid-3" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
             {['Single (AC)', 'Double (Non-AC)', 'Triple (Standard)'].map((opt) => (
               <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', cursor: 'pointer' }}>
@@ -945,48 +972,88 @@ const StudentRegistrationView = () => (
   </div>
 );
 
-const StudentCredentialsView = () => (
-  <div>
-    <SectionHeader title="Student Credentials" subtitle="Manage access and passwords" />
+const StudentCredentialsView = () => {
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleShowMore = (student) => {
+    // Map the existing student data to match the StudentDetailsModal's expected format
+    const studentDetails = {
+      ...student,
+      rollNumber: student.id,
+      roomNumber: student.room,
+      roomType: MOCK_ALLOTMENT.find(a => a.name === student.name)?.type || 'N/A',
+      email: `${student.name.toLowerCase().replace(/\s+/g, '.')}@university.edu`,
+      phone: '+1 234 567 890',
+      course: 'Computer Science',
+      department: 'School of Engineering',
+      guardianName: student.guardian,
+      guardianPhone: '+1 234 567 891',
+      address: '123 University Ave, Campus City, 12345',
+      status: student.status === 'Active' ? 'Active' : 'Inactive'
+    };
     
-    <div className="card">
-      <div className="table-responsive">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Student ID</th>
-              <th>Name</th>
-              <th>Last Login</th>
-              <th>Account Status</th>
-              <th className="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {MOCK_CREDENTIALS.map((cred) => (
-              <tr key={cred.id}>
-                <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{cred.id}</td>
-                <td style={{ fontWeight: 500 }}>{cred.name}</td>
-                <td style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Clock style={{ width: '0.75rem', height: '0.75rem' }} /> {cred.lastLogin}
-                </td>
-                <td><Badge type={cred.status} /></td>
-                <td className="text-right">
-                  <button 
-                    onClick={() => alert(`Password reset link sent to ${cred.name}`)}
-                    className="btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                  >
-                    Reset Password
-                  </button>
-                </td>
+    setSelectedStudent(studentDetails);
+    setIsModalOpen(true);
+  };
+  return (
+    <>
+      <SectionHeader title="Student Credentials" subtitle="View and manage student information" />
+      
+      <div className="card">
+        <div className="table-responsive">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Room No.</th>
+                <th>Student Name</th>
+                <th>Guardian Name</th>
+                <th>Year</th>
+                <th className="text-right">Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {MOCK_CREDENTIALS.map((student) => (
+                <tr key={student.id}>
+                  <td style={{ fontWeight: 500 }}>{student.room}</td>
+                  <td style={{ fontWeight: 500 }}>{student.name}</td>
+                  <td>{student.guardian}</td>
+                  <td>{student.year} Year</td>
+                  <td className="text-right">
+                    <button 
+                      onClick={() => handleShowMore(student)}
+                      className="btn-outline"
+                      style={{ 
+                        fontSize: '0.75rem', 
+                        padding: '0.25rem 0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginLeft: 'auto',
+                        background: 'var(--primary-light)',
+                        borderColor: 'var(--primary-color)',
+                        color: 'var(--primary-color)'
+                      }}
+                    >
+                      Show More
+                      <ChevronDown size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  </div>
-);
+      {isModalOpen && (
+        <StudentDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          student={selectedStudent}
+        />
+      )}
+    </>
+  );
+};
 
 const IssuesView = () => (
   <div>
@@ -1256,7 +1323,6 @@ const AdminDashboard = () => {
   };
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'hostel-setup', label: 'Hostel Setup', icon: Building },
     { id: 'room-allotment', label: 'Room Allotment', icon: BedDouble },
     { 
       id: 'mess-management', 
@@ -1276,8 +1342,7 @@ const AdminDashboard = () => {
   ];
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <DashboardView />;
-      case 'hostel-setup': return <HostelSetupView />;
+      case 'dashboard': return <DashboardView setActiveTab={setActiveTab} />;
       case 'room-allotment': return <RoomAllotmentView />;
       case 'registration': return <StudentRegistrationView />;
       case 'credentials': return <StudentCredentialsView />;
@@ -1287,7 +1352,7 @@ const AdminDashboard = () => {
       case 'mess-reviews': return <MessReviewsView />;
       case 'mess-fees': return <MessFeesView />;
       case 'mess-attendance': return <MessAttendanceView />;
-      default: return <DashboardView />;
+      default: return <DashboardView setActiveTab={setActiveTab} />;
     }
   };
   return (
