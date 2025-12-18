@@ -24,7 +24,7 @@ import {
   DollarSign,   
   ClipboardCheck 
 } from 'lucide-react';
-import { getRoomStats } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents } from '../services/api';
 
 // --- Mock Data ---
 const MOCK_STATS = [
@@ -878,126 +878,392 @@ const RoomAllotmentView = () => (
   </div>
 );
 
-const StudentRegistrationView = () => (
-  <div className="content-container">
-    <SectionHeader title="Student Registration" subtitle="Register new student to the hostel" />
-    
-    <div className="card card-padding">
-      <form>
-        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
-            <input type="text" className="form-input" placeholder="John Doe" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Roll Number</label>
-            <input type="text" className="form-input" placeholder="CS-2024-001" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input type="email" className="form-input" placeholder="john@university.edu" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Phone Number</label>
-            <input type="tel" className="form-input" placeholder="+1 234 567 890" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Course</label>
-            <select className="form-select">
-              <option>Computer Science</option>
-              <option>Mechanical Engineering</option>
-              <option>Business Administration</option>
-              <option>Arts & Literature</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Year</label>
-            <select className="form-select">
-              <option>1st Year</option>
-              <option>2nd Year</option>
-              <option>3rd Year</option>
-              <option>4th Year</option>
-            </select>
-          </div>
-        </div>
+const StudentRegistrationView = () => {
+  const [formData, setFormData] = useState({
+    // Student Information
+    fullName: '',
+    rollNumber: '',
+    email: '',
+    phoneNumber: '',
+    course: 'Computer Science', // Default value
+    year: '1st Year', // Default value
+    // Guardian Information
+    guardianName: '',
+    relationship: 'Father', // Default value
+    guardianEmail: '',
+    guardianPhone: '',
+    // Hostel Preference
+    preferredRoomType: 'Single (AC)' // Default value
+  });
 
-        <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Guardian Information</h3>
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ success: null, message: '' });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleRoomTypeChange = (roomType) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredRoomType: roomType
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus({ success: null, message: '' });
+
+    try {
+      const response = await registerStudent(formData);
+      setSubmitStatus({
+        success: true,
+        message: 'Student registered successfully!'
+      });
+      // Reset form after successful submission
+      setFormData({
+        fullName: '',
+        rollNumber: '',
+        email: '',
+        phoneNumber: '',
+        course: 'Computer Science',
+        year: '1st Year',
+        guardianName: '',
+        relationship: 'Father',
+        guardianEmail: '',
+        guardianPhone: '',
+        preferredRoomType: 'Single (AC)'
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      setSubmitStatus({
+        success: false,
+        message: error.message || 'Failed to register student. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="content-container">
+      <SectionHeader title="Student Registration" subtitle="Register new student to the hostel" />
+      
+      {submitStatus.message && (
+        <div className={`alert ${submitStatus.success ? 'alert-success' : 'alert-error'}`}>
+          {submitStatus.message}
+        </div>
+      )}
+
+      <div className="card card-padding">
+        <form onSubmit={handleSubmit}>
           <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label">Guardian's Full Name</label>
-              <input type="text" className="form-input" placeholder="Guardian's name" />
+              <label className="form-label">Full Name *</label>
+              <input
+                type="text"
+                className="form-input"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="form-group">
-              <label className="form-label">Relationship with Student</label>
-              <select className="form-select">
-                <option>Father</option>
-                <option>Mother</option>
-                <option>Brother</option>
-                <option>Sister</option>
-                <option>Guardian</option>
-                <option>Other</option>
+              <label className="form-label">Roll Number *</label>
+              <input
+                type="text"
+                className="form-input"
+                name="rollNumber"
+                value={formData.rollNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email Address *</label>
+              <input
+                type="email"
+                className="form-input"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number *</label>
+              <input
+                type="tel"
+                className="form-input"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Course *</label>
+              <select
+                className="form-select"
+                name="course"
+                value={formData.course}
+                onChange={handleChange}
+                required
+              >
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="Business Administration">Business Administration</option>
+                <option value="Arts & Literature">Arts & Literature</option>
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input type="email" className="form-input" placeholder="guardian@example.com" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Mobile Number</label>
-              <input type="tel" className="form-input" placeholder="+1 234 567 890" />
+              <label className="form-label">Year *</label>
+              <select
+                className="form-select"
+                name="year"
+                value={formData.year}
+                onChange={handleChange}
+                required
+              >
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Hostel Preference</h3>
-          <label className="form-label">Preferred Room Type</label>
-          <div className="grid-3" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-            {['Single (AC)', 'Double (Non-AC)', 'Triple (Standard)'].map((opt) => (
-              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', cursor: 'pointer' }}>
-                <input type="radio" name="preference" style={{ accentColor: 'var(--primary-color)' }} />
-                <span style={{ fontSize: '0.875rem' }}>{opt}</span>
-              </label>
-            ))}
+          <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Guardian Information</h3>
+            <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
+              <div className="form-group">
+                <label className="form-label">Guardian's Full Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="guardianName"
+                  value={formData.guardianName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Relationship with Student *</label>
+                <select
+                  className="form-select"
+                  name="relationship"
+                  value={formData.relationship}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Brother">Brother</option>
+                  <option value="Sister">Sister</option>
+                  <option value="Guardian">Guardian</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email Address *</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  name="guardianEmail"
+                  value={formData.guardianEmail}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mobile Number *</label>
+                <input
+                  type="tel"
+                  className="form-input"
+                  name="guardianPhone"
+                  value={formData.guardianPhone}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <button type="button" className="btn-outline">Cancel</button>
-          <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Register Student</button>
-        </div>
-      </form>
+          <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Hostel Preference</h3>
+            <label className="form-label">Preferred Room Type *</label>
+            <div className="grid-3" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+              {['Single (AC)', 'Double (Non-AC)', 'Triple (Standard)'].map((opt) => (
+                <label
+                  key={opt}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    backgroundColor: formData.preferredRoomType === opt ? 'var(--primary-light)' : 'transparent',
+                    borderColor: formData.preferredRoomType === opt ? 'var(--primary-color)' : 'var(--border-color)'
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="preference"
+                    checked={formData.preferredRoomType === opt}
+                    onChange={() => handleRoomTypeChange(opt)}
+                    style={{ accentColor: 'var(--primary-color)' }}
+                  />
+                  <span style={{ fontSize: '0.875rem' }}>{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={() => {
+                // Reset form
+                setFormData({
+                  fullName: '',
+                  rollNumber: '',
+                  email: '',
+                  phoneNumber: '',
+                  course: 'Computer Science',
+                  year: '1st Year',
+                  guardianName: '',
+                  relationship: 'Father',
+                  guardianEmail: '',
+                  guardianPhone: '',
+                  preferredRoomType: 'Single (AC)'
+                });
+                setSubmitStatus({ success: null, message: '' });
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: 'auto' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Registering...' : 'Register Student'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const StudentCredentialsView = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch students when component mounts
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await getAllStudents();
+        if (response.success) {
+          setStudents(response.data || []);
+        } else {
+          setError(response.message || 'Failed to fetch students');
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Error fetching students. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
   const handleShowMore = (student) => {
-    // Map the existing student data to match the StudentDetailsModal's expected format
+    console.log('Student data:', student); // Debug log
+    
     const studentDetails = {
       ...student,
-      rollNumber: student.id,
-      roomNumber: student.room,
-      roomType: MOCK_ALLOTMENT.find(a => a.name === student.name)?.type || 'N/A',
-      email: `${student.name.toLowerCase().replace(/\s+/g, '.')}@university.edu`,
-      phone: '+1 234 567 890',
-      course: 'Computer Science',
-      department: 'School of Engineering',
-      guardianName: student.guardian,
-      guardianPhone: '+1 234 567 891',
-      address: '123 University Ave, Campus City, 12345',
-      status: student.status === 'Active' ? 'Active' : 'Inactive'
+      name: student.fullName || `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+      rollNumber: student.rollNumber || student.id || 'N/A',
+      roomNumber: student.roomAllocated || 'N/A',
+      roomType: student.preferredRoomType || 'N/A',
+      email: student.email || `${student.fullName?.toLowerCase().replace(/\s+/g, '.')}@university.edu`,
+      phone: student.phoneNumber || student.phone || 'N/A',
+      course: student.course || 'N/A',
+      year: student.year || 'N/A',
+      department: 'School of ' + (
+        student.course === 'Computer Science' || student.course === 'Mechanical Engineering' ? 'Engineering' : 
+        student.course === 'Business Administration' ? 'Business' : 'Arts & Sciences'
+      ),
+      guardianName: student.guardianName || 'N/A',
+      guardianPhone: student.guardianPhone || 'N/A',
+      address: student.address || 'N/A',
+      status: 'Active'
     };
     
+    console.log('Mapped student details:', studentDetails); // Debug log
     setSelectedStudent(studentDetails);
     setIsModalOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="content-container">
+        <SectionHeader title="Student Credentials" subtitle="Loading student information..." />
+        <div className="card">
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="spinner"></div>
+            <p>Loading students...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="content-container">
+        <SectionHeader title="Student Credentials" subtitle="Error loading student information" />
+        <div className="card">
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger-color)' }}>
+            <AlertCircle size={24} style={{ marginBottom: '1rem' }} />
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="btn-primary"
+              style={{ marginTop: '1rem' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <SectionHeader title="Student Credentials" subtitle="View and manage student information" />
+      <SectionHeader 
+        title="Student Credentials" 
+        subtitle={`Viewing ${students.length} student${students.length !== 1 ? 's' : ''}`} 
+      />
       
       <div className="card">
         <div className="table-responsive">
@@ -1008,38 +1274,48 @@ const StudentCredentialsView = () => {
                 <th>Student Name</th>
                 <th>Guardian Name</th>
                 <th>Year</th>
+                <th>Course</th>
                 <th className="text-right">Details</th>
               </tr>
             </thead>
             <tbody>
-              {MOCK_CREDENTIALS.map((student) => (
-                <tr key={student.id}>
-                  <td style={{ fontWeight: 500 }}>{student.room}</td>
-                  <td style={{ fontWeight: 500 }}>{student.name}</td>
-                  <td>{student.guardian}</td>
-                  <td>{student.year} Year</td>
-                  <td className="text-right">
-                    <button 
-                      onClick={() => handleShowMore(student)}
-                      className="btn-outline"
-                      style={{ 
-                        fontSize: '0.75rem', 
-                        padding: '0.25rem 0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        marginLeft: 'auto',
-                        background: 'var(--primary-light)',
-                        borderColor: 'var(--primary-color)',
-                        color: 'var(--primary-color)'
-                      }}
-                    >
-                      Show More
-                      <ChevronDown size={16} />
-                    </button>
+              {students.length > 0 ? (
+                students.map((student) => (
+                  <tr key={student._id || student.id}>
+                    <td style={{ fontWeight: 500 }}>{student.roomAllocated || 'N/A'}</td>
+                    <td style={{ fontWeight: 500 }}>{student.fullName}</td>
+                    <td>{student.guardianName}</td>
+                    <td>{student.year}</td>
+                    <td>{student.course}</td>
+                    <td className="text-right">
+                      <button 
+                        onClick={() => handleShowMore(student)}
+                        className="btn-outline"
+                        style={{ 
+                          fontSize: '0.75rem', 
+                          padding: '0.25rem 0.75rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginLeft: 'auto',
+                          background: 'var(--primary-light)',
+                          borderColor: 'var(--primary-color)',
+                          color: 'var(--primary-color)'
+                        }}
+                      >
+                        Show More
+                        <ChevronDown size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
+                    No students found. Register a new student to get started.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -1054,7 +1330,6 @@ const StudentCredentialsView = () => {
     </>
   );
 };
-
 const IssuesView = () => (
   <div>
     <SectionHeader title="Issues & Complaints" subtitle="Track and resolve student complaints" />
