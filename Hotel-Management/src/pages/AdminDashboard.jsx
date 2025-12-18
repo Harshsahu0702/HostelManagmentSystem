@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Building, 
@@ -6,8 +6,7 @@ import {
   UserPlus, 
   Shield, 
   AlertCircle, 
-  MessageSquare, 
-  // Menu, // Removed Menu icon import
+  MessageSquare,
   X, 
   Bell, 
   Search, 
@@ -23,6 +22,52 @@ import {
   DollarSign,   
   ClipboardCheck 
 } from 'lucide-react';
+import { getRoomStats } from '../services/api';
+
+// --- Mock Data ---
+const MOCK_STATS = [
+  { title: 'Total Students', value: '0', colorClass: 'text-blue bg-blue-light', icon: Users },
+  { 
+    title: 'Rooms Occupied', 
+    value: '0 / 0', 
+    colorClass: 'text-green bg-green-light', 
+    icon: BedDouble,
+    key: 'rooms'
+  },
+  { title: 'Pending Issues', value: '0', colorClass: 'text-orange bg-orange-light', icon: AlertCircle },
+  { title: 'New Messages', value: '5', colorClass: 'text-indigo bg-indigo-light', icon: MessageSquare },
+];
+
+const MOCK_ROOM_TYPES = [
+  { id: 1, type: 'Single (AC)', capacity: 1, count: 50, price: 12000 },
+  { id: 2, type: 'Double (Non-AC)', capacity: 2, count: 100, price: 6000 },
+  { id: 3, type: 'Triple (Standard)', capacity: 3, count: 100, price: 4000 },
+];
+
+const MOCK_ALLOTMENT = [
+  { id: 101, name: 'John Doe', room: 'A-101', type: 'Single (AC)', status: 'Allotted' },
+  { id: 102, name: 'Jane Smith', room: 'B-204', type: 'Double (Non-AC)', status: 'Allotted' },
+  { id: 103, name: 'Mike Johnson', room: '-', type: 'Triple (Standard)', status: 'Pending' },
+  { id: 104, name: 'Sarah Wilson', room: 'A-105', type: 'Single (AC)', status: 'Allotted' },
+];
+
+const MOCK_CREDENTIALS = [
+  { id: 'ST-2023-001', name: 'John Doe', lastLogin: '2 hrs ago', status: 'Active' },
+  { id: 'ST-2023-002', name: 'Jane Smith', lastLogin: '1 day ago', status: 'Active' },
+  { id: 'ST-2023-003', name: 'Mike Johnson', lastLogin: 'Never', status: 'Locked' },
+];
+
+const MOCK_ISSUES = [
+  { id: 1, student: 'John Doe', room: 'A-101', type: 'Electrical', desc: 'Fan not working', status: 'Open' },
+  { id: 2, student: 'Jane Smith', room: 'B-204', type: 'Plumbing', desc: 'Leaky faucet', status: 'Resolved' },
+  { id: 3, student: 'Sarah Wilson', room: 'A-105', type: 'Cleaning', desc: 'Room not cleaned', status: 'Open' },
+];
+
+const MOCK_CHATS = [
+  { id: 1, sender: 'Admin', text: 'Please pay your mess dues by Friday.', time: '10:00 AM', isMe: true },
+  { id: 2, sender: 'Student (John)', text: 'Sure sir, I will do it today.', time: '10:05 AM', isMe: false },
+  { id: 3, sender: 'Admin', text: 'Great, thanks.', time: '10:06 AM', isMe: true },
+];
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -589,87 +634,8 @@ const cssStyles = `
   .chat-container { flex-direction: column; height: auto; }
   .chat-sidebar { width: 100%; height: 200px; border-right: none; border-bottom: 1px solid var(--border-color); }
 }
+
 `;
-
-// --- Mock Data ---
-
-const MOCK_STATS = [
-  { title: 'Total Students', value: '450', colorClass: 'text-blue bg-blue-light', icon: Users },
-  { title: 'Rooms Occupied', value: '210/250', colorClass: 'text-green bg-green-light', icon: BedDouble },
-  { title: 'Pending Issues', value: '12', colorClass: 'text-orange bg-orange-light', icon: AlertCircle },
-  { title: 'New Messages', value: '5', colorClass: 'text-indigo bg-indigo-light', icon: MessageSquare },
-];
-
-const MOCK_ROOM_TYPES = [
-  { id: 1, type: 'Single (AC)', capacity: 1, count: 50, price: 12000 },
-  { id: 2, type: 'Double (Non-AC)', capacity: 2, count: 100, price: 6000 },
-  { id: 3, type: 'Triple (Standard)', capacity: 3, count: 100, price: 4000 },
-];
-
-const MOCK_ALLOTMENT = [
-  { id: 101, name: 'John Doe', room: 'A-101', type: 'Single (AC)', status: 'Allotted' },
-  { id: 102, name: 'Jane Smith', room: 'B-204', type: 'Double (Non-AC)', status: 'Allotted' },
-  { id: 103, name: 'Mike Johnson', room: '-', type: 'Triple (Standard)', status: 'Pending' },
-  { id: 104, name: 'Sarah Wilson', room: 'A-105', type: 'Single (AC)', status: 'Allotted' },
-];
-
-const MOCK_CREDENTIALS = [
-  { id: 'ST-2023-001', name: 'John Doe', lastLogin: '2 hrs ago', status: 'Active' },
-  { id: 'ST-2023-002', name: 'Jane Smith', lastLogin: '1 day ago', status: 'Active' },
-  { id: 'ST-2023-003', name: 'Mike Johnson', lastLogin: 'Never', status: 'Locked' },
-];
-
-const MOCK_ISSUES = [
-  { id: 1, student: 'John Doe', room: 'A-101', type: 'Electrical', desc: 'Fan not working', status: 'Open' },
-  { id: 2, student: 'Jane Smith', room: 'B-204', type: 'Plumbing', desc: 'Leaky faucet', status: 'Resolved' },
-  { id: 3, student: 'Sarah Wilson', room: 'A-105', type: 'Cleaning', desc: 'Room not cleaned', status: 'Open' },
-];
-
-const MOCK_CHATS = [
-  { id: 1, sender: 'Admin', text: 'Please pay your mess dues by Friday.', time: '10:00 AM', isMe: true },
-  { id: 2, sender: 'Student (John)', text: 'Sure sir, I will do it today.', time: '10:05 AM', isMe: false },
-  { id: 3, sender: 'Admin', text: 'Great, thanks.', time: '10:06 AM', isMe: true },
-];
-
-// --- New Mock Data for Mess Management ---
-const MOCK_MESS_MENU = [
-  { day: 'Monday', breakfast: 'Aloo Paratha, Curd', lunch: 'Rice, Dal, Mixed Veg', dinner: 'Roti, Paneer Butter Masala' },
-  { day: 'Tuesday', breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Egg Curry', dinner: 'Roti, Chicken Curry / Veg Kofta' },
-  { day: 'Wednesday', breakfast: 'Poha, Tea', lunch: 'Rice, Rajma', dinner: 'Roti, Aloo Gobi' },
-  { day: 'Thursday', breakfast: 'Sandwich, Coffee', lunch: 'Rice, Kadhi Pakora', dinner: 'Roti, Mix Veg' },
-  { day: 'Friday', breakfast: 'Puri, Bhaji', lunch: 'Veg Biryani, Raita', dinner: 'Roti, Dal Makhani' },
-  { day: 'Saturday', breakfast: 'Dosa, Chutney', lunch: 'Rice, Sambar, Fry', dinner: 'Roti, Mushroom Masala' },
-  { day: 'Sunday', breakfast: 'Chole Bhature', lunch: 'Fried Rice, Manchurian', dinner: 'Roti, Sev Tamatar' },
-];
-
-const MOCK_MESS_REVIEWS = {
-  ratings: [
-    { label: '5 Stars', count: 120, percent: 60 },
-    { label: '4 Stars', count: 50, percent: 25 },
-    { label: '3 Stars', count: 20, percent: 10 },
-    { label: '2 Stars', count: 6, percent: 3 },
-    { label: '1 Star', count: 4, percent: 2 },
-  ],
-  feedbacks: [
-    { id: 1, student: 'John Doe', rating: 5, comment: 'Great food today!' },
-    { id: 2, student: 'Mike Ross', rating: 3, comment: 'Lunch was a bit oily.' },
-    { id: 3, student: 'Sarah Lee', rating: 4, comment: 'Breakfast needs more variety.' },
-  ]
-};
-
-const MOCK_MESS_FEES = [
-  { id: 1, name: 'John Doe', roll: 'CS-001', fee: '$150', status: 'Paid', due: '$0' },
-  { id: 2, name: 'Jane Smith', roll: 'CS-002', fee: '$150', status: 'Due', due: '$150' },
-  { id: 3, name: 'Mike Johnson', roll: 'CS-003', fee: '$150', status: 'Paid', due: '$0' },
-  { id: 4, name: 'Emily Davis', roll: 'CS-004', fee: '$150', status: 'Due', due: '$50' },
-];
-
-const MOCK_MESS_ATTENDANCE = [
-  { id: 1, name: 'John Doe', date: 'Oct 24, 2023', breakfast: true, lunch: true, dinner: true },
-  { id: 2, name: 'Jane Smith', date: 'Oct 24, 2023', breakfast: true, lunch: false, dinner: true },
-  { id: 3, name: 'Mike Johnson', date: 'Oct 24, 2023', breakfast: false, lunch: true, dinner: false },
-  { id: 4, name: 'Emily Davis', date: 'Oct 24, 2023', breakfast: true, lunch: true, dinner: true },
-];
 
 // --- Sub Components ---
 
@@ -684,87 +650,112 @@ const StatCard = ({ title, value, colorClass, icon: Icon }) => (
     </div>
   </div>
 );
-
 const SectionHeader = ({ title, subtitle }) => (
   <div className="section-header">
     <h2 className="section-title">{title}</h2>
     <p className="section-subtitle">{subtitle}</p>
   </div>
 );
-
 const Badge = ({ type }) => (
   <span className={`badge ${type}`}>
     {type}
   </span>
 );
-
 // --- Views ---
 
-const DashboardView = () => (
-  <div>
-    <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
-    <div className="grid-4" style={{ marginBottom: '2rem' }}>
-      {MOCK_STATS.map((stat, idx) => (
-        <StatCard 
-          key={idx}
-          title={stat.title}
-          value={stat.value}
-          colorClass={stat.colorClass}
-          icon={stat.icon}
-        />
-      ))}
-    </div>
-
-    <div className="grid-2">
-      <div className="card">
-        <div className="card-padding" style={{ borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontWeight: 600 }}>Recent Allocations</h3>
-        </div>
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Room</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_ALLOTMENT.slice(0, 3).map((item) => (
-                <tr key={item.id}>
-                  <td style={{ fontWeight: 500 }}>{item.name}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{item.room}</td>
-                  <td><Badge type={item.status} /></td>
+const DashboardView = () => {
+  const [roomStats, setRoomStats] = useState({ totalRooms: 0, occupiedRooms: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    const fetchRoomStats = async () => {
+      try {
+        const stats = await getRoomStats();
+        setRoomStats(stats);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch room stats:', err);
+        setError('Failed to load room statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoomStats();
+  }, []);
+  const stats = [
+    { 
+      ...MOCK_STATS[0], // Total Students
+      value: MOCK_STATS[0].value
+    },
+    { 
+      ...MOCK_STATS[1], // Rooms Occupied
+      value: loading ? 'Loading...' : error ? 'Error' : `${roomStats.occupiedRooms} / ${roomStats.totalRooms}`
+    },
+    ...MOCK_STATS.slice(2)
+  ];
+  return (
+    <div>
+      <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
+      <div className="grid-4" style={{ marginBottom: '2rem' }}>
+        {stats.map((stat, idx) => (
+          <StatCard 
+            key={idx}
+            title={stat.title}
+            value={stat.value}
+            colorClass={stat.colorClass}
+            icon={stat.icon}
+          />
+        ))}
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-padding" style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontWeight: 600 }}>Recent Allocations</h3>
+          </div>
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Room</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {MOCK_ALLOTMENT.slice(0, 3).map((item) => (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 500 }}>{item.name}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{item.room}</td>
+                    <td><Badge type={item.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-
-      <div className="card">
-        <div className="card-padding" style={{ borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontWeight: 600 }}>Pending Issues</h3>
-        </div>
-        <div className="card-padding" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {MOCK_ISSUES.filter(i => i.status === 'Open').map((issue) => (
-            <div key={issue.id} style={{ display: 'flex', gap: '1rem', padding: '0.75rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
-              <AlertCircle style={{ color: '#ef4444', width: '1.25rem', height: '1.25rem', marginTop: '0.125rem' }} />
-              <div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827' }}>{issue.type} Issue</h4>
-                <p style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: '0.25rem' }}>{issue.desc} - Room {issue.room}</p>
+        <div className="card">
+          <div className="card-padding" style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontWeight: 600 }}>Pending Issues</h3>
+          </div>
+          <div className="card-padding" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {MOCK_ISSUES.filter(i => i.status === 'Open').map((issue) => (
+              <div key={issue.id} style={{ display: 'flex', gap: '1rem', padding: '0.75rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
+                <AlertCircle style={{ color: '#ef4444', width: '1.25rem', height: '1.25rem', marginTop: '0.125rem' }} />
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827' }}>{issue.type} Issue</h4>
+                  <p style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: '0.25rem' }}>{issue.desc} - Room {issue.room}</p>
+                </div>
               </div>
-            </div>
-          ))}
-          {MOCK_ISSUES.filter(i => i.status === 'Open').length === 0 && (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No pending issues.</p>
-          )}
+            ))}
+            {MOCK_ISSUES.filter(i => i.status === 'Open').length === 0 && (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No pending issues.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-
+  );
+};
 const HostelSetupView = () => {
   const [rooms, setRooms] = useState(MOCK_ROOM_TYPES);
 
@@ -1253,27 +1244,20 @@ const MessAttendanceView = () => (
 );
 
 // --- Main App Component ---
-
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  
-  // State for collapsible menus
   const [expandedMenus, setExpandedMenus] = useState({});
-
   const toggleSubmenu = (menuId) => {
     setExpandedMenus(prev => ({
       ...prev,
       [menuId]: !prev[menuId]
     }));
   };
-
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'hostel-setup', label: 'Hostel Setup', icon: Building },
     { id: 'room-allotment', label: 'Room Allotment', icon: BedDouble },
-    
-    // New Collapsible Menu for Mess Management
     { 
       id: 'mess-management', 
       label: 'Mess Management', 
@@ -1285,13 +1269,11 @@ const AdminDashboard = () => {
         { id: 'mess-attendance', label: 'Student Attendance' },
       ]
     },
-
     { id: 'registration', label: 'Student Registration', icon: UserPlus },
     { id: 'credentials', label: 'Student Credentials', icon: Shield },
     { id: 'issues', label: 'Issues & Complaints', icon: AlertCircle },
     { id: 'chat', label: 'Chat & Notices', icon: MessageSquare },
   ];
-
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <DashboardView />;
@@ -1301,49 +1283,36 @@ const AdminDashboard = () => {
       case 'credentials': return <StudentCredentialsView />;
       case 'issues': return <IssuesView />;
       case 'chat': return <ChatView />;
-      
-      // New Mess Views
       case 'mess-menu': return <MessMenuView />;
       case 'mess-reviews': return <MessReviewsView />;
       case 'mess-fees': return <MessFeesView />;
       case 'mess-attendance': return <MessAttendanceView />;
-      
       default: return <DashboardView />;
     }
   };
-
   return (
     <div className="admin-dashboard-wrapper">
-      {/* Inject CSS styles */}
       <style>{cssStyles}</style>
-
       <div className="app-container">
-        
-        {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
           <div 
             className="mobile-overlay" 
             onClick={() => setSidebarOpen(false)}
           />
         )}
-
-        {/* Sidebar */}
         <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
             <div className="logo-wrapper">
               <Building />
               <span>Admin Dashboard</span>
             </div>
-            {/* Close button removed */}
           </div>
-
           <nav className="sidebar-nav">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedMenus[item.id];
               const isActive = activeTab === item.id || (hasSubItems && item.subItems.some(sub => sub.id === activeTab));
-
               return (
                 <div key={item.id}>
                   <button
@@ -1366,7 +1335,6 @@ const AdminDashboard = () => {
                     )}
                   </button>
                   
-                  {/* Nested Submenu */}
                   {hasSubItems && (
                     <div className={`submenu ${isExpanded ? 'open' : ''}`}>
                       {item.subItems.map(sub => (
@@ -1387,7 +1355,6 @@ const AdminDashboard = () => {
               );
             })}
           </nav>
-
           <div className="sidebar-footer">
             <button className="btn-logout">
               <LogOut />
@@ -1395,14 +1362,8 @@ const AdminDashboard = () => {
             </button>
           </div>
         </aside>
-
-        {/* Main Content Area */}
         <div className="main-wrapper">
-          
-          {/* Header */}
           <header className="top-bar">
-            {/* Menu Toggle Button Removed */}
-
             <div className="header-right">
               <button className="notification-btn">
                 <Bell />
@@ -1419,18 +1380,14 @@ const AdminDashboard = () => {
               </div>
             </div>
           </header>
-
-          {/* Dynamic Content */}
           <main className="content-area">
             <div className="content-container">
               {renderContent()}
             </div>
           </main>
-
         </div>
       </div>
     </div>
   );
 };
-
 export default AdminDashboard;

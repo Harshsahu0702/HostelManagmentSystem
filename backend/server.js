@@ -11,10 +11,12 @@ app.use(express.json());
 
 const authRoutes = require("./routes/authRoutes");
 const hostelSetupRoutes = require("./routes/hostelSetup");
+const roomRoutes = require("./routes/roomRoutes");
 
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/hostel-setup", hostelSetupRoutes);
+app.use("/api/rooms", roomRoutes);
 
 // DB
 const mongoURI =
