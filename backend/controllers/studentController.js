@@ -49,9 +49,9 @@ exports.registerStudent = async (req, res) => {
 
         await newStudent.save();
 
-        // Don't send password back in response for security
-       // const studentData = newStudent.toObject();
-        //delete studentData.password;
+        
+        const studentData = newStudent.toObject();
+        
 
         res.status(201).json({
             success: true,
