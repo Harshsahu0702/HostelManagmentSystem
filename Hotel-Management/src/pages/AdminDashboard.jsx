@@ -1,6 +1,7 @@
 import StudentDetailsModal from "./StudentDetailsModal";
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   LayoutDashboard, 
   Building, 
@@ -25,78 +26,6 @@ import {
   ClipboardCheck 
 } from 'lucide-react';
 import { getRoomStats, registerStudent, getAllStudents, createAdmin } from '../services/api';
-
-// --- Mock Data ---
-const MOCK_STATS = [
-  { title: 'Total Students', value: '0', colorClass: 'text-blue bg-blue-light', icon: Users },
-  { 
-    title: 'Rooms Occupied', 
-    value: '0 / 0', 
-    colorClass: 'text-green bg-green-light', 
-    icon: BedDouble,
-    key: 'rooms'
-  },
-  { title: 'Pending Issues', value: '0', colorClass: 'text-orange bg-orange-light', icon: AlertCircle },
-  { title: 'New Messages', value: '5', colorClass: 'text-indigo bg-indigo-light', icon: MessageSquare },
-];
-
-const MOCK_ROOM_TYPES = [
-  { id: 1, type: 'Single (AC)', capacity: 1, count: 50, price: 12000 },
-  { id: 2, type: 'Double (Non-AC)', capacity: 2, count: 100, price: 6000 },
-  { id: 3, type: 'Triple (Standard)', capacity: 3, count: 100, price: 4000 },
-];
-
-const MOCK_ALLOTMENT = [
-  { id: 101, name: 'John Doe', room: 'A-101', type: 'Single (AC)', status: 'Allotted' },
-  { id: 102, name: 'Jane Smith', room: 'B-204', type: 'Double (Non-AC)', status: 'Allotted' },
-  { id: 103, name: 'Mike Johnson', room: '-', type: 'Triple (Standard)', status: 'Pending' },
-  { id: 104, name: 'Sarah Wilson', room: 'A-105', type: 'Single (AC)', status: 'Allotted' },
-];
-
-const MOCK_CREDENTIALS = [
-  { 
-    id: 'ST-2023-001', 
-    name: 'John Doe', 
-    room: 'A-101',
-    guardian: 'Robert Doe',
-    year: '2nd',
-    lastLogin: '2 hrs ago', 
-    status: 'Active',
-    details: 'Additional details about John Doe including contact information and emergency contacts.'
-  },
-  { 
-    id: 'ST-2023-002', 
-    name: 'Jane Smith', 
-    room: 'B-204',
-    guardian: 'Mary Smith',
-    year: '3rd',
-    lastLogin: '1 day ago', 
-    status: 'Active',
-    details: 'Additional details about Jane Smith including contact information and emergency contacts.'
-  },
-  { 
-    id: 'ST-2023-003', 
-    name: 'Mike Johnson', 
-    room: 'C-305',
-    guardian: 'David Johnson',
-    year: '1st',
-    lastLogin: 'Never', 
-    status: 'Locked',
-    details: 'Additional details about Mike Johnson including contact information and emergency contacts.'
-  },
-];
-
-const MOCK_ISSUES = [
-  { id: 1, student: 'John Doe', room: 'A-101', type: 'Electrical', desc: 'Fan not working', status: 'Open' },
-  { id: 2, student: 'Jane Smith', room: 'B-204', type: 'Plumbing', desc: 'Leaky faucet', status: 'Resolved' },
-  { id: 3, student: 'Sarah Wilson', room: 'A-105', type: 'Cleaning', desc: 'Room not cleaned', status: 'Open' },
-];
-
-const MOCK_CHATS = [
-  { id: 1, sender: 'Admin', text: 'Please pay your mess dues by Friday.', time: '10:00 AM', isMe: true },
-  { id: 2, sender: 'Student (John)', text: 'Sure sir, I will do it today.', time: '10:05 AM', isMe: false },
-  { id: 3, sender: 'Admin', text: 'Great, thanks.', time: '10:06 AM', isMe: true },
-];
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -693,35 +622,59 @@ const Badge = ({ type }) => (
 // --- Views ---
 
 const DashboardView = ({ setActiveTab }) => {
-  const [roomStats, setRoomStats] = useState({ totalRooms: 0, occupiedRooms: 0 });
+  const [stats, setStats] = useState([
+    { title: 'Total Students', value: '0', colorClass: 'text-blue bg-blue-light', icon: Users },
+    { title: 'Rooms Occupied', value: '0 / 0', colorClass: 'text-green bg-green-light', icon: BedDouble },
+    { title: 'Pending Issues', value: '0', colorClass: 'text-orange bg-orange-light', icon: AlertCircle },
+    { title: 'New Messages', value: '0', colorClass: 'text-indigo bg-indigo-light', icon: MessageSquare },
+  ]);
+  const [recentAllocations, setRecentAllocations] = useState([]);
+  const [pendingIssues, setPendingIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
   useEffect(() => {
-    const fetchRoomStats = async () => {
+    const fetchData = async () => {
       try {
-        const stats = await getRoomStats();
-        setRoomStats(stats);
-        setError(null);
+        const [roomStats, studentsRes, issuesRes] = await Promise.all([
+          getRoomStats().catch(() => ({ occupiedRooms: 0, totalRooms: 0 })),
+          getAllStudents().catch(() => ({ success: false, data: [] })),
+          axios.get('http://localhost:5000/api/issues').catch(() => ({ data: [] }))
+        ]);
+
+        const students = studentsRes.success ? studentsRes.data : [];
+        const issues = issuesRes.data || [];
+        const openIssues = issues.filter(i => i.status === 'Open');
+
+        setStats([
+          { title: 'Total Students', value: students.length.toString(), colorClass: 'text-blue bg-blue-light', icon: Users },
+          { title: 'Rooms Occupied', value: `${roomStats.occupiedRooms || 0} / ${roomStats.totalRooms || 0}`, colorClass: 'text-green bg-green-light', icon: BedDouble },
+          { title: 'Pending Issues', value: openIssues.length.toString(), colorClass: 'text-orange bg-orange-light', icon: AlertCircle },
+          { title: 'New Messages', value: '5', colorClass: 'text-indigo bg-indigo-light', icon: MessageSquare },
+        ]);
+
+        setRecentAllocations(students.slice(0, 5).map(s => ({
+          id: s._id || s.id,
+          name: s.fullName,
+          room: s.roomAllocated || '-',
+          status: s.roomAllocated ? 'Allotted' : 'Pending'
+        })));
+
+        setPendingIssues(openIssues.slice(0, 3).map(i => ({
+            id: i._id || i.id,
+            type: i.type || 'General',
+            desc: i.description || i.desc || 'No description',
+            room: i.roomNumber || i.room || 'N/A',
+            status: i.status
+        })));
+
       } catch (err) {
-        console.error('Failed to fetch room stats:', err);
-        setError('Failed to load room statistics');
+        console.error('Failed to fetch dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchRoomStats();
+    fetchData();
   }, []);
-  const stats = [
-    { 
-      ...MOCK_STATS[0], // Total Students
-      value: MOCK_STATS[0].value
-    },
-    { 
-      ...MOCK_STATS[1], // Rooms Occupied
-      value: loading ? 'Loading...' : error ? 'Error' : `${roomStats.occupiedRooms} / ${roomStats.totalRooms}`
-    },
-    ...MOCK_STATS.slice(2)
-  ];
 
   return (
     <div>
@@ -796,13 +749,16 @@ const DashboardView = ({ setActiveTab }) => {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_ALLOTMENT.slice(0, 3).map((item) => (
+                {recentAllocations.map((item) => (
                   <tr key={item.id}>
                     <td style={{ fontWeight: 500 }}>{item.name}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{item.room}</td>
                     <td><Badge type={item.status} /></td>
                   </tr>
                 ))}
+                {recentAllocations.length === 0 && (
+                  <tr><td colSpan="3" style={{textAlign: 'center', padding: '1rem'}}>No recent allocations</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -812,7 +768,7 @@ const DashboardView = ({ setActiveTab }) => {
             <h3 style={{ fontWeight: 600 }}>Pending Issues</h3>
           </div>
           <div className="card-padding" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {MOCK_ISSUES.filter(i => i.status === 'Open').map((issue) => (
+            {pendingIssues.map((issue) => (
               <div key={issue.id} style={{ display: 'flex', gap: '1rem', padding: '0.75rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
                 <AlertCircle style={{ color: '#ef4444', width: '1.25rem', height: '1.25rem', marginTop: '0.125rem' }} />
                 <div>
@@ -821,7 +777,7 @@ const DashboardView = ({ setActiveTab }) => {
                 </div>
               </div>
             ))}
-            {MOCK_ISSUES.filter(i => i.status === 'Open').length === 0 && (
+            {pendingIssues.length === 0 && (
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No pending issues.</p>
             )}
           </div>
@@ -830,7 +786,27 @@ const DashboardView = ({ setActiveTab }) => {
     </div>
   );
 };
-const RoomAllotmentView = () => (
+const RoomAllotmentView = () => {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await getAllStudents();
+        if (response.success) {
+          setStudents(response.data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  return (
   <div>
     <SectionHeader title="Room Allotment" subtitle="Manage student room assignments" />
     
@@ -859,24 +835,28 @@ const RoomAllotmentView = () => (
             </tr>
           </thead>
           <tbody>
-            {MOCK_ALLOTMENT.map((item) => (
-              <tr key={item.id}>
-                <td style={{ color: 'var(--text-secondary)' }}>#{item.id}</td>
-                <td style={{ fontWeight: 500 }}>{item.name}</td>
-                <td style={{ color: 'var(--text-secondary)' }}>{item.type}</td>
-                <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.room}</td>
-                <td><Badge type={item.status} /></td>
+            {students.map((item) => (
+              <tr key={item._id || item.id}>
+                <td style={{ color: 'var(--text-secondary)' }}>#{item.rollNumber || item.id}</td>
+                <td style={{ fontWeight: 500 }}>{item.fullName}</td>
+                <td style={{ color: 'var(--text-secondary)' }}>{item.preferredRoomType || 'N/A'}</td>
+                <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
+                <td><Badge type={item.roomAllocated ? 'Allotted' : 'Pending'} /></td>
                 <td className="text-right">
                   <button className="action-btn">Edit</button>
                 </td>
               </tr>
             ))}
+            {students.length === 0 && !loading && (
+              <tr><td colSpan="6" style={{textAlign: 'center', padding: '1rem'}}>No students found</td></tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 //create admin
 const CreateAdminView = () => {
