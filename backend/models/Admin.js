@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const adminSchema = new mongoose.Schema({
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'HostelSetup', required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },

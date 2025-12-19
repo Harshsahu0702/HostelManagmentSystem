@@ -5,9 +5,9 @@ const HostelSetup = require("../models/HostelSetup");
 // SAVE / UPDATE DRAFT
 router.post("/save-draft", async (req, res) => {
   try {
-    const { step, data } = req.body;
+    const { step, data, hostelId } = req.body;
 
-    let setup = await HostelSetup.findOne({ status: "DRAFT" });
+    let setup = hostelId ? await HostelSetup.findById(hostelId) : null;
 
     if (!setup) setup = new HostelSetup();
 
@@ -17,16 +17,17 @@ router.post("/save-draft", async (req, res) => {
 
     await setup.save();
 
-    res.json({ success: true, message: "Draft saved" });
+    res.json({ success: true, hostelId: setup._id, message: "Draft saved successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // GET DRAFT (resume setup)
-router.get("/draft", async (req, res) => {
+router.get("/draft/:hostelId", async (req, res) => {
   try {
-    const setup = await HostelSetup.findOne({ status: "DRAFT" });
+    const { hostelId } = req.params;
+    const setup = await HostelSetup.findById(hostelId);
     res.json(setup);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -36,10 +37,16 @@ router.get("/draft", async (req, res) => {
 // FINAL SUBMIT
 router.post("/complete", async (req, res) => {
   try {
-    const setup = await HostelSetup.findOne({ status: "DRAFT" });
+    const { hostelId } = req.body;
+
+    if (!hostelId) {
+      return res.status(400).json({ message: "hostelId is required" });
+    }
+
+    const setup = await HostelSetup.findById(hostelId);
 
     if (!setup) {
-      return res.status(400).json({ message: "No draft found" });
+      return res.status(404).json({ message: "Hostel not found" });
     }
 
     setup.status = "COMPLETED";

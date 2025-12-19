@@ -25,6 +25,7 @@ const HostelSetupDashboard = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
   const [validationError, setValidationError] = useState(''); // State for Red Alert
+  const [hostelId, setHostelId] = useState(null);
 
   // --- Central State Management ---
   const [formData, setFormData] = useState({
@@ -78,6 +79,13 @@ const HostelSetupDashboard = () => {
       return () => clearTimeout(timer);
     }
   }, [validationError]);
+
+  // --- Load Hostel ID from Local Storage on Mount ---
+  useEffect(() => {
+    const savedHostelId = localStorage.getItem("hostelId");
+    if (savedHostelId) setHostelId(savedHostelId);
+  }, []);
+
 
   const regenerateRooms = () => {
     const newRooms = [];
@@ -198,18 +206,75 @@ const HostelSetupDashboard = () => {
     }
   };
 //navigation handelers
+
 const nextStep = async () => {
+  if (!validateStep(activeStep)) {
+    setValidationError("Please fill in all required fields before proceeding.");
+    return;
+  }
+
   try {
+    // ✅ STEP 1: Save Basic Info & CREATE HOSTEL
+    if (activeStep === 1) {
+      const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
+
+      const res = await axios.post(
+        "http://localhost:5000/api/hostel-setup/save-draft",
+        {
+          step: 1,
+          data: draftData,
+        }
+      );
+
+      // 🔴 MOST IMPORTANT LINE (THIS WAS MISSING)
+      setHostelId(res.data.hostelId);
+      localStorage.setItem("hostelId", res.data.hostelId);
+
+      setActiveStep(2);
+      return;
+    }
+
+    // ✅ STEP 2: Create Admin (NO save-draft here)
+    if (activeStep === 2) {
+      const storedHostelId = hostelId || localStorage.getItem("hostelId");
+
+      if (!storedHostelId) {
+        setValidationError("Hostel ID missing. Please save Basic Info first.");
+        return;
+      }
+
+      await axios.post(
+        "http://localhost:5000/api/admins/create",
+        {
+          name: formData.adminName,
+          email: formData.adminEmail,
+          password: formData.adminPassword,
+          hostelId: storedHostelId,
+        }
+      );
+
+      setActiveStep(3);
+      return;
+    }
+
+    // ✅ STEPS 3, 4, 5 → save-draft with hostelId
+    const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
+
     await axios.post(
       "http://localhost:5000/api/hostel-setup/save-draft",
       {
         step: activeStep,
-        data: formData,
+        data: draftData,
+        hostelId: hostelId || localStorage.getItem("hostelId"),
       }
     );
-    if (activeStep < 6) setActiveStep(prev => prev + 1);
+
+    if (activeStep < totalSteps) {
+      setActiveStep(prev => prev + 1);
+    }
   } catch (err) {
-    console.error("Draft save failed", err);
+    console.error("Operation failed", err);
+    setValidationError(err.response?.data?.message || "An error occurred.");
   }
 };
 
@@ -218,11 +283,11 @@ const nextStep = async () => {
     if (activeStep > 1) setActiveStep(prev => prev - 1);
   };
 
- const completeSetup = async () => {
+const completeSetup = async () => {
   try {
     const res = await axios.post(
       "http://localhost:5000/api/hostel-setup/complete",
-      { data: formData }
+      { hostelId }
     );
 
     console.log("Server Response:", res.data);
@@ -232,6 +297,7 @@ const nextStep = async () => {
     alert("Failed to save hostel setup");
   }
 };
+
   // --- Render Steps ---
   const renderStepContent = () => {
     switch(activeStep) {
