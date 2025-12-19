@@ -37,3 +37,20 @@ export const getAllStudents = async () => {
     throw error;
   }
 };
+
+// CREATE ADMIN
+export const createAdmin = async (adminData) => {
+  const res = await fetch('/admins/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(adminData),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to create admin');
+  return data;
+};
+
