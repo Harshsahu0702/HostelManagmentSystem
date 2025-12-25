@@ -1,6 +1,7 @@
 import StudentDetailsModal from "./StudentDetailsModal";
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   LayoutDashboard, 
@@ -25,7 +26,7 @@ import {
   DollarSign,   
   ClipboardCheck 
 } from 'lucide-react';
-import { getRoomStats, registerStudent, getAllStudents, createAdmin } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail } from '../services/api';
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -327,6 +328,25 @@ const cssStyles = `
   font-weight: 700;
   font-size: 0.875rem;
 }
+
+.user-profile { cursor: pointer; }
+
+.profile-dropdown {
+  position: absolute;
+  right: 1.5rem;
+  top: calc(var(--header-height) + 0.5rem);
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  min-width: 260px;
+  z-index: 60;
+}
+
+.profile-row { display: flex; gap: 0.75rem; align-items: center; }
+.profile-label { color: var(--text-secondary); font-size: 0.75rem; }
+.profile-value { color: var(--text-main); font-weight: 600; font-size: 0.875rem; }
 
 /* Content Area */
 .content-area {
@@ -1748,6 +1768,50 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const location = useLocation();
+  const profileWrapperRef = React.useRef(null);
+  const [adminProfile, setAdminProfile] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const loggedInEmail = location?.state?.email || localStorage.getItem('adminEmail');
+
+  const getCreatedAtFromId = (id) => {
+    try {
+      if (!id) return 'N/A';
+      const timestamp = parseInt(id.toString().substring(0, 8), 16) * 1000;
+      return new Date(timestamp).toLocaleString();
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
+  useEffect(() => {
+    if (!loggedInEmail) return;
+    let mounted = true;
+    const fetchProfile = async () => {
+      try {
+        const res = await getAdminByEmail(loggedInEmail);
+        if (mounted && res && res.success) {
+          setAdminProfile(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin profile', err);
+      }
+    };
+    fetchProfile();
+    return () => { mounted = false; };
+  }, [loggedInEmail]);
+
+  // close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileWrapperRef.current && !profileWrapperRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
   const toggleSubmenu = (menuId) => {
     setExpandedMenus(prev => ({
       ...prev,
@@ -1804,7 +1868,7 @@ const AdminDashboard = () => {
           <div className="sidebar-header">
             <div className="logo-wrapper">
               <Building />
-              <span>Admin Dashboard</span>
+              <span>{adminProfile ? `Welcome, ${adminProfile.name}` : 'Admin Dashboard'}</span>
             </div>
           </div>
           <nav className="sidebar-nav">
@@ -1869,14 +1933,58 @@ const AdminDashboard = () => {
                 <Bell />
                 <span className="badge-dot"></span>
               </button>
-              <div className="user-profile">
-                <div className="user-info">
-                  <p className="user-name">Admin User</p>
-                  <p className="user-role">Super Admin</p>
+              <div style={{ position: 'relative' }} ref={profileWrapperRef}>
+                <div className="user-profile" onClick={() => setDropdownOpen(prev => !prev)}>
+                  <div className="user-info">
+                    <p className="user-name">{adminProfile?.name || 'Admin User'}</p>
+                    <p className="user-role">{adminProfile?.role || 'Super Admin'}</p>
+                  </div>
+                  <div className="user-avatar">
+                    {(() => {
+                      const name = adminProfile?.name || 'Admin';
+                      const parts = name.split(' ').filter(Boolean);
+                      const initials = (parts.length === 1
+                        ? parts[0].slice(0,2)
+                        : (parts[0][0] + (parts[1] ? parts[1][0] : '') )).toUpperCase();
+                      return initials;
+                    })()}
+                  </div>
                 </div>
-                <div className="user-avatar">
-                  AD
-                </div>
+
+                {dropdownOpen && (
+                  <div className="profile-dropdown">
+                    <div style={{ paddingBottom: 8 }} className="profile-row">
+                      <div className="user-avatar" style={{ width: 48, height: 48, fontSize: '1rem' }}>
+                        {adminProfile ? (
+                          (adminProfile.name || 'A').split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase()
+                        ) : 'AD'}
+                      </div>
+                      <div>
+                        <div className="profile-value">{adminProfile?.name || 'Admin User'}</div>
+                        <div className="profile-label">{adminProfile?.email || ''}</div>
+                      </div>
+                    </div>
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <div>
+                        <div className="profile-label">Role</div>
+                        <div className="profile-value">{adminProfile?.role || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="profile-label">Phone</div>
+                        <div className="profile-value">{adminProfile?.phone || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="profile-label">Hostel / Dept</div>
+                        <div className="profile-value">{adminProfile?.hostelId?.hostelName || adminProfile?.hostelId || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="profile-label">Account Created</div>
+                        <div className="profile-value">{adminProfile?.createdAt || getCreatedAtFromId(adminProfile?._id)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </header>

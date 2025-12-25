@@ -88,3 +88,24 @@ exports.createSuperAdmin = async (req, res) => {
         });
     }
 };
+
+// Get admin profile by email (public endpoint for admin UI)
+exports.getAdminByEmail = async (req, res) => {
+    try {
+        const { email } = req.params;
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        const admin = await Admin.findOne({ email }).select('-password').populate('hostelId', 'hostelName');
+
+        if (!admin) {
+            return res.status(404).json({ success: false, message: 'Admin not found' });
+        }
+
+        res.json({ success: true, data: admin });
+    } catch (error) {
+        console.error('Error fetching admin by email:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};

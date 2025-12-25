@@ -38,6 +38,17 @@ export const getAllStudents = async () => {
   }
 };
 
+// Admin related API
+export const getAdminByEmail = async (email) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/admins/${encodeURIComponent(email)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin by email:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // CREATE ADMIN
 export const createAdmin = async (adminData) => {
   const res = await fetch('/admins/create', {

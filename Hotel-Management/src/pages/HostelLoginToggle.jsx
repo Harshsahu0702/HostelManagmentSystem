@@ -41,6 +41,7 @@ export default function HostelLoginToggle() {
             password: studentCreds.password,
           },
         });
+        
       } else {
         const adminCreds = {
           email: emailRef.current.value,
@@ -51,7 +52,8 @@ export default function HostelLoginToggle() {
           "http://localhost:5000/api/auth/admin/login",
           adminCreds
         );
-        
+        // persist email locally so dashboard can load profile even after refresh
+        localStorage.setItem('adminEmail', adminCreds.email);
         navigate("/admin-dashboard", {
           state: {
             email: adminCreds.email,
