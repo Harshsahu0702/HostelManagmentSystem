@@ -26,7 +26,7 @@ import {
   DollarSign,   
   ClipboardCheck 
 } from 'lucide-react';
-import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot } from '../services/api';
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -809,6 +809,10 @@ const DashboardView = ({ setActiveTab }) => {
 const RoomAllotmentView = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [autoLoading, setAutoLoading] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState('');
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -826,6 +830,23 @@ const RoomAllotmentView = () => {
     fetchStudents();
   }, []);
 
+  const handleManualSave = async (studentId, roomNumber) => {
+    try {
+      await manualAllot(studentId, roomNumber);
+      alert('Room allotted successfully');
+      // refresh students
+      const r = await getAllStudents();
+      if (r.success) setStudents(r.data);
+      setEditingStudent(null);
+      setAvailableRooms([]);
+      setSelectedRoomNumber('');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Manual allot failed');
+    }
+  };
+
+
   return (
   <div>
     <SectionHeader title="Room Allotment" subtitle="Manage student room assignments" />
@@ -838,7 +859,25 @@ const RoomAllotmentView = () => {
         </div>
         <div className="btn-group">
           <button className="btn-outline">Filter</button>
-          <button className="btn-primary" style={{ width: 'auto' }}>Auto-Allot</button>
+          <button className="btn-primary" style={{ width: 'auto' }} onClick={async () => {
+            setAutoLoading(true);
+            try {
+              const res = await autoAllot();
+              // show summary and optional details count
+              alert(`Auto-Allot completed. Allotted: ${res.summary.allotted}, Failed: ${res.summary.failed}`);
+              if (res.details && res.details.length > 0) {
+                console.debug('Auto-Allot details:', res.details.slice(0, 20));
+              }
+              // refresh students list
+              const r = await getAllStudents();
+              if (r.success) setStudents(r.data);
+            } catch (err) {
+              console.error(err);
+              alert(err.message || 'Auto allot failed');
+            } finally {
+              setAutoLoading(false);
+            }
+          }} disabled={autoLoading}>{autoLoading ? 'Processing...' : 'Auto-Allot'}</button>
         </div>
       </div>
 
@@ -855,7 +894,7 @@ const RoomAllotmentView = () => {
             </tr>
           </thead>
           <tbody>
-            {students.map((item) => (
+                {students.map((item) => (
               <tr key={item._id || item.id}>
                 <td style={{ color: 'var(--text-secondary)' }}>#{item.rollNumber || item.id}</td>
                 <td style={{ fontWeight: 500 }}>{item.fullName}</td>
@@ -863,7 +902,32 @@ const RoomAllotmentView = () => {
                 <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
                 <td><Badge type={item.roomAllocated ? 'Allotted' : 'Pending'} /></td>
                 <td className="text-right">
-                  <button className="action-btn">Edit</button>
+                  <button className="action-btn" onClick={async () => {
+                    setEditingStudent(item);
+                    try {
+                      const avail = await getAvailableRooms(item.preferredRoomType);
+                      if (avail.success) {
+                        if (avail.data && avail.data.length > 0) {
+                          setAvailableRooms(avail.data);
+                          setSelectedRoomNumber(avail.data[0]?.roomNumber || '');
+                        } else {
+                          // no rooms matching pref, fetch any available rooms as fallback
+                          const any = await getAvailableRooms();
+                          if (any.success && any.data && any.data.length > 0) {
+                            setAvailableRooms(any.data);
+                            setSelectedRoomNumber(any.data[0]?.roomNumber || '');
+                          } else {
+                            setAvailableRooms([]);
+                            setSelectedRoomNumber('');
+                            alert('No available rooms for this student');
+                          }
+                        }
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to fetch available rooms');
+                    }
+                  }}>Edit</button>
                 </td>
               </tr>
             ))}
@@ -874,7 +938,31 @@ const RoomAllotmentView = () => {
         </table>
       </div>
     </div>
-  </div>
+      {/* Manual Allot Modal */}
+      {editingStudent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
+          <div style={{ width: 520, background: 'white', borderRadius: 8, padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>Assign Room - {editingStudent.fullName}</h3>
+              <button className="action-btn" onClick={() => { setEditingStudent(null); setAvailableRooms([]); setSelectedRoomNumber(''); }}>Close</button>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label className="form-label">Available Rooms (Preference: {editingStudent.preferredRoomType})</label>
+              <select className="form-input" value={selectedRoomNumber} onChange={(e) => setSelectedRoomNumber(e.target.value)}>
+                <option value="">-- Select room --</option>
+                {availableRooms.map(r => (
+                  <option key={r.roomNumber} value={r.roomNumber}>{r.roomNumber}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <button className="btn-outline" onClick={() => { setEditingStudent(null); setAvailableRooms([]); setSelectedRoomNumber(''); }}>Cancel</button>
+              <button className="btn-primary" onClick={() => handleManualSave(editingStudent._id || editingStudent.id, selectedRoomNumber)} disabled={!selectedRoomNumber}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -1063,6 +1151,7 @@ const StudentRegistrationView = () => {
     rollNumber: '',
     email: '',
     phoneNumber: '',
+    address: '',
     course: 'Computer Science', // Default value
     year: '1st Year', // Default value
     // Guardian Information
@@ -1109,6 +1198,7 @@ const StudentRegistrationView = () => {
         rollNumber: '',
         email: '',
         phoneNumber: '',
+        address: '',
         course: 'Computer Science',
         year: '1st Year',
         guardianName: '',
@@ -1183,6 +1273,18 @@ const StudentRegistrationView = () => {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Residential Address *</label>
+              <textarea
+                className="form-input"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                rows="3"
+                required
+                style={{ minHeight: '80px' }}
               />
             </div>
             <div className="form-group">
@@ -1277,7 +1379,16 @@ const StudentRegistrationView = () => {
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Hostel Preference</h3>
             <label className="form-label">Preferred Room Type *</label>
             <div className="grid-3" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-              {['Single (AC)', 'Double (Non-AC)', 'Triple (Standard)'].map((opt) => (
+              {[
+                'Single (AC)',
+                'Single (Non-AC)',
+                'Double (AC)',
+                'Double (Non-AC)',
+                'Triple (AC)',
+                'Triple (Non-AC)',
+                'Quadruple (AC)',
+                'Quadruple (Non-AC)'
+              ].map((opt) => (
                 <label
                   key={opt}
                   style={{

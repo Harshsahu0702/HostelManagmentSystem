@@ -7,7 +7,8 @@ const RoomSchema = new mongoose.Schema({
   floor: Number,
   type: String,
   capacity: Number,
-  occupied: Boolean,
+  occupiedCount: { type: Number, default: 0 },
+  occupied: { type: Boolean, default: false },
   active: Boolean,
 });
 

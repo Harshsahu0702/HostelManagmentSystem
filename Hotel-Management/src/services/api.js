@@ -49,6 +49,48 @@ export const getAdminByEmail = async (email) => {
   }
 };
 
+// Rooms & Allotment APIs
+export const getAllRooms = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/admin/rooms`);
+    return res.data;
+  } catch (err) {
+    console.error('getAllRooms error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getAvailableRooms = async (type) => {
+  try {
+    const url = `${API_BASE_URL}/admin/available-rooms${type ? `?type=${encodeURIComponent(type)}` : ''}`;
+    const res = await axios.get(url);
+    return res.data;
+  } catch (err) {
+    console.error('getAvailableRooms error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const autoAllot = async () => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/admin/auto-allot`);
+    return res.data;
+  } catch (err) {
+    console.error('autoAllot error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const manualAllot = async (studentId, roomNumber) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/admin/manual-allot`, { studentId, roomNumber });
+    return res.data;
+  } catch (err) {
+    console.error('manualAllot error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
 // CREATE ADMIN
 export const createAdmin = async (adminData) => {
   const res = await fetch('/admins/create', {

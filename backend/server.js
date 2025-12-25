@@ -14,6 +14,7 @@ const hostelSetupRoutes = require("./routes/hostelSetup");
 const roomRoutes = require("./routes/roomRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const adminAllotRoutes = require("./routes/adminAllotRoutes");
 
 
 // routes
@@ -22,6 +23,7 @@ app.use("/api/hostel-setup", hostelSetupRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/admins", adminRoutes);
+app.use("/api/admin", adminAllotRoutes);
 
 // DB
 const mongoURI =

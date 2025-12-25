@@ -50,12 +50,16 @@ const HostelSetupDashboard = () => {
     // Step 4: Room Matrix (Generated)
     generatedRooms: [], 
 
-    // Internal reference for dropdowns
+    // Internal reference for dropdowns (expanded to match student preference options)
     roomTypes: {
-      single: { capacity: 1 },
-      double: { capacity: 2 },
-      triple: { capacity: 3 },
-      dormitory: { capacity: 6 },
+      'Single (AC)': { capacity: 1 },
+      'Single (Non-AC)': { capacity: 1 },
+      'Double (AC)': { capacity: 2 },
+      'Double (Non-AC)': { capacity: 2 },
+      'Triple (AC)': { capacity: 3 },
+      'Triple (Non-AC)': { capacity: 3 },
+      'Quadruple (AC)': { capacity: 4 },
+      'Quadruple (Non-AC)': { capacity: 4 },
     },
 
     // Step 5: Mess
@@ -98,14 +102,17 @@ const HostelSetupDashboard = () => {
           const roomSuffix = r < 10 ? `0${r}` : `${r}`;
           const roomNum = `${building.name.charAt(0).toUpperCase()}-${f}${roomSuffix}`;
           
+          const defaultType = Object.keys(formData.roomTypes).includes('Double (Non-AC)')
+            ? 'Double (Non-AC)'
+            : Object.keys(formData.roomTypes)[0];
           newRooms.push({
             id: idCounter++,
             roomNumber: roomNum,
             buildingId: building.id,
             buildingName: building.name,
             floor: f,
-            type: 'double', // Default type
-            capacity: 2,    // Default capacity based on double
+            type: defaultType,
+            capacity: formData.roomTypes[defaultType]?.capacity || 2,
             occupied: false,
             active: true
           });
@@ -463,7 +470,7 @@ const completeSetup = async () => {
                           onChange={(e) => handleRoomUpdate(room.id, 'type', e.target.value)}
                         >
                           {Object.keys(formData.roomTypes).map(type => (
-                            <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                            <option key={type} value={type}>{type}</option>
                           ))}
                         </select>
                       </td>
