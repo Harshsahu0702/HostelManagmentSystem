@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
-import { ThumbsUp, Send } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 import RatingStars from '../components/RatingStars';
+import { useStudent } from '../../contexts/StudentContext';
+import { postFeedback } from '../../services/api';
 
 const Feedback = () => {
+  const { student } = useStudent() || {};
   const [submitted, setSubmitted] = useState(false);
   const [ratings, setRatings] = useState({ infrastructure: 0, cleanliness: 0, wardenSupport: 0, wifiInternet: 0, messQuality: 0 });
   const [comments, setComments] = useState("");
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!student?._id) return setError('Student not identified');
+    const avg = Math.round(Object.values(ratings).reduce((a,b) => a+b,0) / Object.keys(ratings).length) || 0;
+    try {
+      await postFeedback({ studentId: student._id, rating: avg, comments });
+      setSubmitted(true);
+    } catch (err) {
+      setError('Failed to submit feedback');
+    }
   };
 
   if (submitted) {
@@ -39,6 +50,7 @@ const Feedback = () => {
         <div className="card">
           <textarea className="form-control" rows="5" placeholder="Suggestions..." value={comments} onChange={(e) => setComments(e.target.value)}></textarea>
           <button className="btn btn-primary" style={{width: '100%', marginTop: '24px'}}>Submit Feedback</button>
+          {error && <div style={{color:'var(--danger)', marginTop:8}}>{error}</div>}
         </div>
       </form>
     </div>

@@ -38,6 +38,147 @@ export const getAllStudents = async () => {
   }
 };
 
+export const getStudentById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/students/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student by id:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Panel related APIs
+export const getNotifications = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/notifications/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getNotifications error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const createComplaint = async (payload) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/panel/complaints`, payload);
+    return res.data;
+  } catch (err) {
+    console.error('createComplaint error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getComplaints = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/complaints/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getComplaints error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const createAntiRagging = async (payload) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/panel/antiragging`, payload);
+    return res.data;
+  } catch (err) {
+    console.error('createAntiRagging error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getAntiRagging = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/antiragging/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getAntiRagging error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getMessMenuByHostel = async (hostelId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/mess/${hostelId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getMessMenu error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const createDeparture = async (payload) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/panel/departure`, payload);
+    return res.data;
+  } catch (err) {
+    console.error('createDeparture error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getDepartures = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/departure/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getDepartures error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getFees = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/fees/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getFees error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const postChatMessage = async (payload) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/panel/chat`, payload);
+    return res.data;
+  } catch (err) {
+    console.error('postChatMessage error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getChat = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/chat/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getChat error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const postFeedback = async (payload) => {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/panel/feedback`, payload);
+    return res.data;
+  } catch (err) {
+    console.error('postFeedback error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+export const getFeedback = async (studentId) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/panel/feedback/${studentId}`);
+    return res.data;
+  } catch (err) {
+    console.error('getFeedback error', err.response?.data || err.message);
+    throw err;
+  }
+};
+
 // Admin related API
 export const getAdminByEmail = async (email) => {
   try {

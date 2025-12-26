@@ -19,32 +19,130 @@ body { margin: 0; background: var(--bg-app); color: var(--text-main); }
 
 .app-container { display: flex; min-height: 100vh; }
 
+/* Updated Sidebar Styles */
 .sidebar {
-  width: 260px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
+  width: 280px;
+  height: 100vh;
+  background: #f0f7ff; /* Whitish blue background */
+  color: #1e3a8a; /* Dark blue text for better contrast */
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
-  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  padding: 1.5rem 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-y: auto; /* Keep vertical scrolling if needed */
 }
-.sidebar-header { padding: 24px; font-weight: 800; font-size: 1.1rem; color: var(--primary); border-bottom: 1px solid var(--border); letter-spacing: 1px; }
-.nav-links { flex: 1; padding: 12px; overflow-y: auto; }
-.nav-item {
+
+.sidebar-header {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid #bfdbfe;
+  margin-bottom: 1rem;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e40af;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-menu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  padding: 0.5rem;
+  width: 100%; /* Ensure it takes full width of sidebar */
+  margin: 0; /* Remove any default margins */
+}
+
+.menu-item {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
-  border-radius: var(--radius);
-  color: var(--text-muted);
-  text-decoration: none;
-  margin-bottom: 2px;
+  width: calc(100% - 1rem); /* Account for the margin */
+  padding: 0.75rem 1.5rem;
+  margin: 0.25rem 0.5rem;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: 0.2s;
-  font-size: 0.9rem;
-  gap: 12px;
+  text-align: left;
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide any overflow */
+  text-overflow: ellipsis; /* Show ellipsis for long text */
 }
-.nav-item:hover { background: #f1f5f9; color: var(--primary); }
-.nav-item.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+
+.menu-item:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.menu-item.active {
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.menu-icon {
+  margin-right: 0.75rem;
+  opacity: 0.9;
+}
+
+.sidebar-footer {
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.logout-button:hover {
+  background: #fecaca;
+}
+
+/* Adjust main content to account for fixed sidebar */
+.main-content {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}
 
 .main-content { flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; }
 .header {

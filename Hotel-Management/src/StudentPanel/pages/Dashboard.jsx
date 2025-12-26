@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import { Utensils, LayoutDashboard, CreditCard, QrCode, X, PlaneTakeoff } from 'lucide-react';
-import { MOCK_DATA } from '../data/mockData';
+import { useStudent } from '../../contexts/StudentContext';
 
 const Dashboard = ({ setActivePage }) => {
   const [showQR, setShowQR] = useState(false);
 
+  const { student, loading } = useStudent() || {};
+
   const stats = [
     { label: "Mess Status", value: "Open", icon: Utensils, color: "#fef3c7", iconColor: "#92400e" },
-    { label: "Current Room", value: "B-402", icon: LayoutDashboard, color: "#e0e7ff", iconColor: "#3730a3" },
-    { label: "Fees Pending", value: "₹3,500", icon: CreditCard, color: "#fee2e2", iconColor: "#991b1b" },
+    { label: "Current Room", value: loading ? 'Loading...' : (student?.roomAllocated || 'Not Found'), icon: LayoutDashboard, color: "#e0e7ff", iconColor: "#3730a3" },
+    { label: "Fees Pending", value: 'Not Found', icon: CreditCard, color: "#fee2e2", iconColor: "#991b1b" },
     { label: "Attendance", value: "Scan QR", icon: QrCode, color: "#dcfce7", iconColor: "#166534", action: () => setShowQR(true) },
   ];
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const todayMenu = MOCK_DATA.messMenu.find(m => m.day === today);
+  const todayMenu = null; // Mess menu not available in DB; show Not Found if needed
 
   return (
     <div>
-      <h3 style={{marginTop: 0}}>Welcome back, Aryan! 👋</h3>
+      <h3 style={{marginTop: 0}}>Welcome back, {loading ? 'Loading...' : (student?.fullName || 'Not Found')}! 👋</h3>
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px'}}>
         {stats.map((s, i) => (
           <div 
@@ -74,7 +76,7 @@ const Dashboard = ({ setActivePage }) => {
             {['breakfast', 'lunch', 'dinner'].map(meal => (
               <div key={meal} style={{padding: '12px', background: '#f8fafc', borderRadius: '8px'}}>
                 <div style={{fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase'}}>{meal}</div>
-                <div style={{fontSize: '0.85rem', fontWeight: 500}}>{todayMenu[meal]}</div>
+                <div style={{fontSize: '0.85rem', fontWeight: 500}}>{todayMenu ? todayMenu[meal] : 'Not Found'}</div>
               </div>
             ))}
           </div>

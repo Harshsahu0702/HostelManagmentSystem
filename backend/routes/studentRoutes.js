@@ -8,4 +8,7 @@ router.post('/register', studentController.registerStudent);
 // Get all students (for admin)
 router.get('/', studentController.getAllStudents);
 
+// Get single student by id
+router.get('/:id', studentController.getStudentById);
+
 module.exports = router;

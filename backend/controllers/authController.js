@@ -1,28 +1,51 @@
-const Student = require("../models/Student");
+const StudentRegistration = require("../models/StudentRegistration");
 const Admin = require("../models/Admin");
 
 // STUDENT LOGIN
 exports.studentLogin = async (req, res) => {
-  const { sid, password } = req.body;
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ 
+      success: false,
+      message: "Email and password are required" 
+    });
+  }
 
   try {
-    const student = await Student.findOne({ sid });
+    const student = await StudentRegistration.findOne({ email });
 
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
     }
 
+    // Check if password matches (since we're storing plain text password)
     if (student.password !== password) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
     }
 
-    res.json({
-      message: "Student login successful",
-      sid: student.sid
+    // Exclude password from the response
+    const { password: _, ...studentData } = student.toObject();
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: studentData,
+      redirect: '/student/dashboard' // Frontend should handle this redirect
     });
 
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error('Login error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error during authentication" 
+    });
   }
 };
 

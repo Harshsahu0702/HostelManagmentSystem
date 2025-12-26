@@ -33,7 +33,7 @@ exports.registerStudent = async (req, res) => {
             });
         }
 
-        // Create new student
+        // Create new student with phone number as password
         const newStudent = new StudentRegistration({
             fullName,
             rollNumber,
@@ -46,7 +46,8 @@ exports.registerStudent = async (req, res) => {
             relationship,
             guardianEmail,
             guardianPhone,
-            preferredRoomType
+            preferredRoomType,
+            password: phoneNumber // Using phone number as password
         });
 
         await newStudent.save();
@@ -87,5 +88,20 @@ exports.getAllStudents = async (req, res) => {
             message: 'Error fetching students',
             error: error.message
         });
+    }
+};
+
+// Get a single student by ID
+exports.getStudentById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const student = await StudentRegistration.findById(id, { password: 0 }); // exclude password
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+        res.status(200).json({ success: true, data: student });
+    } catch (error) {
+        console.error('Error fetching student by id:', error);
+        res.status(500).json({ success: false, message: 'Error fetching student', error: error.message });
     }
 };

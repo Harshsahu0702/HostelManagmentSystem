@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import HostelLoginToggle from "./pages/HostelLoginToggle.jsx";
 import StudentPanel from "./StudentPanel/StudentPanel.jsx";
+import { StudentProvider } from './contexts/StudentContext';
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import HostelSetupDashboard from "./pages/HostelSetupDashboard.jsx";
 
@@ -14,7 +15,7 @@ function App() {
         <Route path="/" element={<HostelLoginToggle />} />
 
         {/* STUDENT PANEL */}
-        <Route path="/student-Panel" element={<StudentPanel />} />
+        <Route path="/student-dashboard" element={<StudentProvider><StudentPanel /></StudentProvider>} />
 
         {/* ADMIN */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />

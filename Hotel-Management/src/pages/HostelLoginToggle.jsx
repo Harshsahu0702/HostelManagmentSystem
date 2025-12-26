@@ -18,7 +18,6 @@ export default function HostelLoginToggle() {
   // Refs for form inputs
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
-  const sidRef = useRef(null);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -26,7 +25,7 @@ export default function HostelLoginToggle() {
     try {
       if (mode === "student") {
         const studentCreds = {
-          sid: sidRef.current.value,
+          email: emailRef.current.value,
           password: passwordRef.current.value,
         };
 
@@ -35,12 +34,11 @@ export default function HostelLoginToggle() {
           studentCreds
         );
 
-        navigate("/student-dashboard", {
-          state: {
-            sid: studentCreds.sid,
-            password: studentCreds.password,
-          },
-        });
+        // persist student profile so app can load StudentContext
+        if (res?.data?.data) {
+          localStorage.setItem('studentData', JSON.stringify(res.data.data));
+        }
+        navigate("/student-dashboard");
         
       } else {
         const adminCreds = {
@@ -130,12 +128,13 @@ export default function HostelLoginToggle() {
                     onSubmit={submitHandler}
                   >
                     <div className="form-group">
-                      <label className="form-label">Student ID</label>
+                      <label className="form-label">Email</label>
                       <input
                         required
-                        name="sid"
-                        ref={sidRef}
-                        placeholder="eg. S2001"
+                        type="email"
+                        name="email"
+                        ref={emailRef}
+                        placeholder="student@college.edu"
                         className="form-input student-focus"
                       />
                     </div>

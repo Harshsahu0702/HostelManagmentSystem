@@ -24,8 +24,9 @@ const studentRegistrationSchema = new mongoose.Schema({
   status: { type: String, default: 'Pending' }, // Pending, Approved, Rejected
   
   // Additional Fields
-  roomAllocated: { type: String, default: '' }
-  // Password field has been removed as per requirement
+  roomAllocated: { type: String, default: '' },
+  // Authentication
+  password: { type: String, required: true }
 });
 
 module.exports = mongoose.model("StudentRegistration", studentRegistrationSchema);

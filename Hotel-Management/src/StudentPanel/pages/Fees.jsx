@@ -1,11 +1,37 @@
 import React from 'react';
 import { CreditCard, Utensils, Download } from 'lucide-react';
-import { MOCK_DATA } from '../data/mockData';
+import { useStudent } from '../../contexts/StudentContext';
+import { getFees } from '../../services/api';
+import { useEffect } from 'react';
 
 const Fees = () => {
-  const hostelTotal = MOCK_DATA.feeHistory.hostel.reduce((acc, curr) => acc + curr.amount, 0);
-  const messTotal = MOCK_DATA.feeHistory.mess.reduce((acc, curr) => acc + curr.amount, 0);
-  const messPaid = MOCK_DATA.feeHistory.mess.filter(m => m.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
+  const { student } = useStudent() || {};
+  const [feeHistory, setFeeHistory] = React.useState({ hostel: [], mess: [] });
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!student?._id) return;
+      setLoading(true); setError(null);
+      try {
+        const res = await getFees(student._id);
+        // backend returns a flat list of FeeRecord; categorize by type if desc contains Mess
+        const records = res.data || [];
+        const hostel = records.filter(r => r.desc && !/mess/i.test(r.desc));
+        const mess = records.filter(r => r.desc && /mess/i.test(r.desc));
+        setFeeHistory({ hostel, mess });
+      } catch (err) {
+        setFeeHistory({ hostel: [], mess: [] });
+        setError('Failed to load fees');
+      } finally { setLoading(false); }
+    };
+    load();
+  }, [student]);
+
+  const hostelTotal = feeHistory.hostel.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const messTotal = feeHistory.mess.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const messPaid = feeHistory.mess.filter(m => m.status === 'Paid').reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap: '24px'}}>
@@ -21,7 +47,7 @@ const Fees = () => {
           <table>
             <thead><tr><th>Description</th><th>Date</th><th>Payment Method</th><th>Amount</th><th>Status</th></tr></thead>
             <tbody>
-              {MOCK_DATA.feeHistory.hostel.map(item => (
+              {(feeHistory.hostel.length ? feeHistory.hostel : []).map(item => (
                 <tr key={item.id}>
                   <td style={{fontWeight: 500}}>{item.desc}</td>
                   <td style={{color: 'var(--text-muted)'}}>{item.date}</td>
@@ -48,13 +74,13 @@ const Fees = () => {
             <div style={{background: '#fef3c7', padding: '8px', borderRadius: '8px'}}><Utensils size={20} color="var(--warning)"/></div>
             <h4 style={{margin:0}}>Mess Fee History - Monthly</h4>
           </div>
-          <div style={{fontSize:'0.85rem', color:'var(--text-muted)'}}>Outstanding: <b style={{color:'var(--danger)'}}>₹{(messTotal - messPaid).toLocaleString()}</b></div>
+            <div style={{fontSize:'0.85rem', color:'var(--text-muted)'}}>Outstanding: <b style={{color:'var(--danger)'}}>₹{(messTotal - messPaid).toLocaleString()}</b></div>
         </div>
         <div style={{overflowX: 'auto'}}>
           <table>
             <thead><tr><th>Billing Month</th><th>Billing Date</th><th>Payment Method</th><th>Amount</th><th>Status</th></tr></thead>
             <tbody>
-              {MOCK_DATA.feeHistory.mess.map(item => (
+              {(feeHistory.mess.length ? feeHistory.mess : []).map(item => (
                 <tr key={item.id}>
                   <td style={{fontWeight: 500}}>{item.desc}</td>
                   <td style={{color: 'var(--text-muted)'}}>{item.date}</td>

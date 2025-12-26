@@ -1,19 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Send, Trash2 } from 'lucide-react';
+import { useStudent } from '../../contexts/StudentContext';
+import { createDeparture, getDepartures } from '../../services/api';
 
 const Departure = () => {
-  const [requests, setRequests] = useState([
-    { id: 1, from: "2024-03-10", to: "2024-03-12", reason: "Family", status: "Approved" },
-  ]);
+  const { student } = useStudent() || {};
+  const [requests, setRequests] = useState([]);
   const [form, setForm] = useState({ fromDate: '', toDate: '', reason: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setRequests([{ id: Date.now(), from: form.fromDate, to: form.toDate, reason: form.reason, status: "Pending" }, ...requests]);
-    setForm({ fromDate: '', toDate: '', reason: '' });
+  const load = async () => {
+    if (!student?._id) return;
+    setLoading(true); setError(null);
+    try {
+      const res = await getDepartures(student._id);
+      setRequests(res.data || []);
+    } catch (err) { setError('Failed to load departures'); }
+    finally { setLoading(false); }
   };
 
-  const handleDelete = (id) => setRequests(requests.filter(req => req.id !== id));
+  useEffect(() => { load(); }, [student]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!student?._id) return setError('Student not identified');
+    try {
+      await createDeparture({ studentId: student._id, fromDate: form.fromDate, toDate: form.toDate, reason: form.reason });
+      setForm({ fromDate: '', toDate: '', reason: '' });
+      load();
+    } catch (err) { setError('Failed to create request'); }
+  };
+
+  const handleDelete = (id) => setRequests(requests.filter(req => req._id !== id));
 
   return (
     <div style={{display:'grid', gridTemplateColumns: '1fr 1fr', gap: '24px'}}>
@@ -23,15 +42,18 @@ const Departure = () => {
           <div className="form-group"><label>Return</label><input type="date" className="form-control" value={form.toDate} onChange={e => setForm({...form, toDate: e.target.value})} required /></div>
           <div className="form-group"><label>Reason</label><textarea className="form-control" rows="3" value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} required></textarea></div>
           <button className="btn btn-primary" style={{width:'100%'}}><Send size={18} /> Submit</button>
+          {error && <div style={{color:'var(--danger)', marginTop:8}}>{error}</div>}
         </form>
       </div>
       <div>
         <h4 style={{marginTop:0}}>History</h4>
+        {loading && <div>Loading...</div>}
+        {!loading && requests.length === 0 && <div className="card">No departures to display</div>}
         {requests.map(req => (
-          <div key={req.id} className="card">
+          <div key={req._id} className="card">
             <div style={{display:'flex', justifyContent:'space-between'}}>
-                <div>{req.from} to {req.to}</div>
-                <div style={{display:'flex', gap: 8}}><span className={`badge badge-${req.status.toLowerCase()}`}>{req.status}</span><button onClick={() => handleDelete(req.id)} className="btn btn-danger-ghost" style={{padding:4}}><Trash2 size={16}/></button></div>
+                <div>{new Date(req.fromDate).toLocaleDateString()} to {new Date(req.toDate).toLocaleDateString()}</div>
+                <div style={{display:'flex', gap: 8}}><span className={`badge badge-${req.status.toLowerCase()}`}>{req.status}</span><button onClick={() => handleDelete(req._id)} className="btn btn-danger-ghost" style={{padding:4}}><Trash2 size={16}/></button></div>
             </div>
           </div>
         ))}
