@@ -125,6 +125,22 @@ export const createAdmin = async (adminData) => {
   return res.data;
 };
 
+/* ================= ADMIN CHAT APIs ================= */
+export const getAllStudentsForChat = async () => {
+  const res = await api.get("/admin/students");
+  return res.data;
+};
+
+export const getChatMessagesWithStudent = async (studentId) => {
+  const res = await api.get(`/admin/chat/${studentId}`);
+  return res.data;
+};
+
+export const sendMessageToStudent = async (studentId, text) => {
+  const res = await api.post("/admin/chat/send", { studentId, text });
+  return res.data;
+};
+
 /* ================= ROOM ALLOTMENT APIs ================= */
 export const getAllRooms = async () => {
   const res = await api.get("/admin/rooms");

@@ -27,8 +27,55 @@ import {
   DollarSign,
   ClipboardCheck
 } from 'lucide-react';
-import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment, getAllStudentsForChat, getChatMessagesWithStudent, sendMessageToStudent } from '../services/api';
 import IssuesComplaints from './issues&complaints';
+
+// --- Mock Data Constants ---
+const MOCK_CHATS = [
+  { id: 1, text: "Hello, I need help with my room allocation", isMe: false, time: "10:30 AM" },
+  { id: 2, text: "Sure, I can help you with that. What's your room number?", isMe: true, time: "10:32 AM" },
+  { id: 3, text: "I'm in room A-101, but there's a maintenance issue", isMe: false, time: "10:35 AM" },
+  { id: 4, text: "I'll send the maintenance team to check it", isMe: true, time: "10:36 AM" }
+];
+
+const MOCK_MESS_MENU = [
+  { day: 'Monday', breakfast: 'Idli, Sambar, Chutney', lunch: 'Rice, Dal, Sabzi, Roti', dinner: 'Chapati, Paneer Curry, Rice' },
+  { day: 'Tuesday', breakfast: 'Poha, Tea', lunch: 'Rice, Rajma, Sabzi, Roti', dinner: 'Rice, Chicken Curry, Salad' },
+  { day: 'Wednesday', breakfast: 'Sandwich, Milk', lunch: 'Rice, Chole, Sabzi, Roti', dinner: 'Chapati, Mix Veg, Rice' },
+  { day: 'Thursday', breakfast: 'Upma, Tea', lunch: 'Rice, Dal Makhani, Sabzi, Roti', dinner: 'Rice, Fish Curry, Salad' },
+  { day: 'Friday', breakfast: 'Dosa, Sambar', lunch: 'Rice, Sambar, Sabzi, Roti', dinner: 'Chapati, Dal, Rice' },
+  { day: 'Saturday', breakfast: 'Paratha, Curd', lunch: 'Rice, Kadhi, Sabzi, Roti', dinner: 'Rice, Egg Curry, Salad' },
+  { day: 'Sunday', breakfast: 'Puri, Bhaji', lunch: 'Rice, Dal, Sabzi, Roti', dinner: 'Chapati, Veg Biryani, Raita' }
+];
+
+const MOCK_MESS_REVIEWS = {
+  ratings: [
+    { label: '5★', count: 45, percentage: 30 },
+    { label: '4★', count: 60, percentage: 40 },
+    { label: '3★', count: 30, percentage: 20 },
+    { label: '2★', count: 10, percentage: 6.7 },
+    { label: '1★', count: 5, percentage: 3.3 }
+  ],
+  feedbacks: [
+    { id: 1, student: 'John Doe', rating: 5, comment: 'Excellent food quality and variety!', date: '2024-01-15' },
+    { id: 2, student: 'Jane Smith', rating: 4, comment: 'Good food but need more variety in breakfast', date: '2024-01-14' },
+    { id: 3, student: 'Mike Johnson', rating: 3, comment: 'Average quality, can be improved', date: '2024-01-13' }
+  ]
+};
+
+const MOCK_MESS_FEES = [
+  { id: 1, name: 'John Doe', roll: 'CS001', month: 'January', status: 'Paid', amount: 3000 },
+  { id: 2, name: 'Jane Smith', roll: 'CS002', month: 'January', status: 'Pending', amount: 3000 },
+  { id: 3, name: 'Mike Johnson', roll: 'CS003', month: 'January', status: 'Paid', amount: 3000 },
+  { id: 4, name: 'Sarah Wilson', roll: 'CS004', month: 'January', status: 'Unpaid', amount: 3000 }
+];
+
+const MOCK_MESS_ATTENDANCE = [
+  { id: 1, name: 'John Doe', date: '2024-01-15', breakfast: 'Present', lunch: 'Present', dinner: 'Absent' },
+  { id: 2, name: 'Jane Smith', date: '2024-01-15', breakfast: 'Present', lunch: 'Absent', dinner: 'Present' },
+  { id: 3, name: 'Mike Johnson', date: '2024-01-15', breakfast: 'Absent', lunch: 'Present', dinner: 'Present' },
+  { id: 4, name: 'Sarah Wilson', date: '2024-01-15', breakfast: 'Present', lunch: 'Present', dinner: 'Present' }
+];
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -1772,62 +1819,216 @@ const StudentCredentialsView = () => {
     </>
   );
 };
-const IssuesView = () => <IssuesComplaints />;
 
-const ChatView = () => (
-  <div className="chat-container">
-    {/* Sidebar List */}
-    <div className="chat-sidebar">
-      <div className="chat-search">
-        <input type="text" placeholder="Search student..." className="form-input" style={{ backgroundColor: '#f9fafb' }} />
+const ChatView = () => {
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch students when component mounts
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await getAllStudentsForChat();
+        if (response.success) {
+          setStudents(response.data || []);
+          if (response.data && response.data.length > 0) {
+            setSelectedStudent(response.data[0]);
+          }
+        } else {
+          setError(response.message || 'Failed to fetch students');
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Error fetching students. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  // Fetch messages when a student is selected
+  useEffect(() => {
+    if (!selectedStudent) return;
+
+    const fetchMessages = async () => {
+      try {
+        const response = await getChatMessagesWithStudent(selectedStudent._id);
+        if (response.success) {
+          setMessages(response.data || []);
+        } else {
+          console.error('Failed to fetch messages:', response.message);
+        }
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+      }
+    };
+
+    fetchMessages();
+  }, [selectedStudent]);
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedStudent) return;
+
+    try {
+      const response = await sendMessageToStudent(selectedStudent._id, newMessage);
+      if (response.success) {
+        // Add the new message to the messages list
+        const newMsg = {
+          _id: response.data._id,
+          text: newMessage,
+          to: selectedStudent._id,
+          fromStudent: null, // Admin message
+          createdAt: new Date()
+        };
+        setMessages([...messages, newMsg]);
+        setNewMessage('');
+      } else {
+        console.error('Failed to send message:', response.message);
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="content-container">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <div className="spinner"></div>
+          <p>Loading chat...</p>
+        </div>
       </div>
-      <div className="chat-list">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className={`chat-item ${i === 1 ? 'active' : ''}`}>
-            <div className="avatar-placeholder">
-              ST
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="content-container">
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger-color)' }}>
+          <AlertCircle size={24} style={{ marginBottom: '1rem' }} />
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn-primary"
+            style={{ marginTop: '1rem' }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-container">
+      {/* Sidebar List */}
+      <div className="chat-sidebar">
+        <div className="chat-search">
+          <input 
+            type="text" 
+            placeholder="Search student..." 
+            className="form-input" 
+            style={{ backgroundColor: '#f9fafb' }} 
+          />
+        </div>
+        <div className="chat-list">
+          {students.length > 0 ? (
+            students.map((student) => (
+              <div 
+                key={student._id} 
+                className={`chat-item ${selectedStudent?._id === student._id ? 'active' : ''}`}
+                onClick={() => setSelectedStudent(student)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="avatar-placeholder">
+                  {student.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'ST'}
+                </div>
+                <div>
+                  <h5 style={{ fontWeight: 500, fontSize: '0.875rem' }}>{student.fullName}</h5>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>
+                    {student.roomAllocated || 'No room assigned'}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              No students found
             </div>
-            <div>
-              <h5 style={{ fontWeight: 500, fontSize: '0.875rem' }}>Student Name</h5>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>Latest message preview...</p>
+          )}
+        </div>
+      </div>
+
+      {/* Message Area */}
+      <div className="chat-main">
+        {selectedStudent ? (
+          <>
+            <div className="chat-header">
+              <h3 style={{ fontWeight: 600 }}>
+                {selectedStudent.fullName} ({selectedStudent.roomAllocated || 'No room'})
+              </h3>
+              <button className="action-btn" style={{ color: 'var(--text-secondary)' }}>
+                <AlertCircle />
+              </button>
             </div>
+
+            <div className="chat-messages">
+              {messages.length > 0 ? (
+                messages.map((msg) => (
+                  <div key={msg._id} className={`message ${msg.fromStudent ? 'received' : 'sent'}`}>
+                    <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
+                    <span className="msg-time" style={{ color: msg.fromStudent ? '#9ca3af' : '#e0e7ff' }}>
+                      {formatTime(msg.createdAt)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  No messages yet. Start a conversation!
+                </div>
+              )}
+            </div>
+
+            <div className="chat-input-area">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                className="form-input"
+                style={{ flex: 1 }}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <button 
+                className="btn-primary" 
+                style={{ width: 'auto' }}
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim()}
+              >
+                <Send style={{ width: '1.25rem', height: '1.25rem' }} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)' }}>
+            Select a student to start chatting
           </div>
-        ))}
+        )}
       </div>
     </div>
-
-    {/* Message Area */}
-    <div className="chat-main">
-      <div className="chat-header">
-        <h3 style={{ fontWeight: 600 }}>John Doe (Room A-101)</h3>
-        <button className="action-btn" style={{ color: 'var(--text-secondary)' }}><AlertCircle /></button>
-      </div>
-
-      <div className="chat-messages">
-        {MOCK_CHATS.map((msg) => (
-          <div key={msg.id} className={`message ${msg.isMe ? 'sent' : 'received'}`}>
-            <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
-            <span className="msg-time" style={{ color: msg.isMe ? '#e0e7ff' : '#9ca3af' }}>
-              {msg.time}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="chat-input-area">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          className="form-input"
-          style={{ flex: 1 }}
-        />
-        <button className="btn-primary" style={{ width: 'auto' }}>
-          <Send style={{ width: '1.25rem', height: '1.25rem' }} />
-        </button>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 // --- New Views for Mess Management ---
 
