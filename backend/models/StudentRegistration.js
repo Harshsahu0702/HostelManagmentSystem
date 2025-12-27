@@ -25,7 +25,9 @@ const studentRegistrationSchema = new mongoose.Schema({
   status: { type: String, default: 'Pending' }, // Pending, Approved, Rejected
   
   // Additional Fields
+  roomId: { type: mongoose.Schema.Types.ObjectId, default: null },
   roomAllocated: { type: String, default: '' },
+  allotmentStatus: { type: String, enum: ["PENDING", "ALLOTTED"], default: "PENDING" },
   // Authentication
   password: { type: String, required: true }
 });

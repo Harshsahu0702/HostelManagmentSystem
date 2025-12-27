@@ -2,11 +2,19 @@ const mongoose = require("mongoose");
 const HostelSetup = require("../models/HostelSetup");
 const StudentRegistration = require("../models/StudentRegistration");
 
+const toObjectId = (value) => {
+  try {
+    return new mongoose.Types.ObjectId(value);
+  } catch (_) {
+    return null;
+  }
+};
+
 // ================= GET ALL ROOMS =================
 exports.getAllRooms = async (req, res) => {
   try {
     const setup = await HostelSetup.findOne({
-      hostelId: req.user.hostelId,
+      _id: req.user.hostelId,
       status: "COMPLETED",
     }).select("generatedRooms");
 
@@ -30,7 +38,7 @@ exports.getAvailableRooms = async (req, res) => {
     const { type } = req.query;
 
     const setup = await HostelSetup.findOne({
-      hostelId: req.user.hostelId,
+      _id: req.user.hostelId,
       status: "COMPLETED",
     }).select("generatedRooms");
 
@@ -41,29 +49,16 @@ exports.getAvailableRooms = async (req, res) => {
       });
     }
 
-    const rooms = setup.generatedRooms.filter((r) => r.active !== false);
-
-    const normalize = (s) =>
-      (s || "")
-        .toString()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
-
-    const prefNorm = normalize(type);
+    const rooms = setup.generatedRooms.filter((r) => r.active === true);
 
     const filtered = rooms.filter((r) => {
       const occ = Number(r.occupiedCount || 0);
       const cap = Number(r.capacity || 1);
-      if (cap <= occ) return false;
+      if (occ >= cap) return false;
+      if (r.occupied === true) return false;
 
       if (!type) return true;
-
-      const roomNorm = normalize(r.type);
-      return (
-        roomNorm === prefNorm ||
-        roomNorm.includes(prefNorm) ||
-        prefNorm.includes(roomNorm)
-      );
+      return r.type === type;
     });
 
     res.json({ success: true, data: filtered });
@@ -80,7 +75,7 @@ exports.autoAllot = async (req, res) => {
 
   try {
     const setup = await HostelSetup.findOne({
-      hostelId: req.user.hostelId,
+      _id: req.user.hostelId,
       status: "COMPLETED",
     }).session(session);
 
@@ -93,7 +88,11 @@ exports.autoAllot = async (req, res) => {
 
     const students = await StudentRegistration.find({
       hostelId: req.user.hostelId,
-      status: { $regex: "^pending$", $options: "i" },
+      $or: [
+        { allotmentStatus: "PENDING" },
+        { allotmentStatus: { $exists: false } },
+        { allotmentStatus: null },
+      ],
     }).session(session);
 
     let allotted = 0;
@@ -101,25 +100,45 @@ exports.autoAllot = async (req, res) => {
     const details = [];
 
     for (const student of students) {
-      const room = setup.generatedRooms.find(
-        (r) =>
-          r.active !== false &&
-          Number(r.occupiedCount || 0) < Number(r.capacity || 1)
-      );
+      if (!student.preferredRoomType) {
+        failed++;
+        details.push({ studentId: student._id, result: "missing-preference" });
+        continue;
+      }
+
+      if (student.allotmentStatus === "ALLOTTED" || student.roomId) {
+        failed++;
+        details.push({ studentId: student._id, result: "already-allotted" });
+        continue;
+      }
+
+      const room = setup.generatedRooms.find((r) => {
+        const occ = Number(r.occupiedCount || 0);
+        const cap = Number(r.capacity || 1);
+        return (
+          r.type === student.preferredRoomType &&
+          r.active === true &&
+          r.occupied === false &&
+          occ < cap
+        );
+      });
 
       if (!room) {
         failed++;
-        details.push({ studentId: student._id, result: "no-room" });
+        details.push({
+          studentId: student._id,
+          preferredRoomType: student.preferredRoomType,
+          result: "no-room",
+        });
         continue;
       }
 
       room.occupiedCount = Number(room.occupiedCount || 0) + 1;
-      if (room.occupiedCount >= Number(room.capacity || 1)) {
-        room.occupied = true;
-      }
+      room.occupied = room.occupiedCount >= Number(room.capacity || 1);
 
+      student.roomId = room._id;
       student.roomAllocated = room.roomNumber;
-      student.status = "Allotted";
+      student.allotmentStatus = "ALLOTTED";
       await student.save({ session });
 
       allotted++;
@@ -149,10 +168,24 @@ exports.manualAllot = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { studentId, roomNumber } = req.body;
+    const { studentId, roomNumber, roomId } = req.body;
+
+    if (!studentId) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "studentId is required" });
+    }
+
+    if (!roomNumber && !roomId) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "roomNumber or roomId is required" });
+    }
 
     const setup = await HostelSetup.findOne({
-      hostelId: req.user.hostelId,
+      _id: req.user.hostelId,
       status: "COMPLETED",
     }).session(session);
 
@@ -175,15 +208,55 @@ exports.manualAllot = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    const room = setup.generatedRooms.find(
-      (r) => r.roomNumber === roomNumber
-    );
+    if (student.allotmentStatus === "ALLOTTED" || student.roomId) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "Student is already allotted" });
+    }
+
+    if (!student.preferredRoomType) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "Student preferredRoomType missing" });
+    }
+
+    const roomObjectId = roomId ? toObjectId(roomId) : null;
+
+    const room = setup.generatedRooms.find((r) => {
+      if (roomNumber && r.roomNumber === roomNumber) return true;
+      if (roomObjectId && r._id && r._id.equals(roomObjectId)) return true;
+      return false;
+    });
 
     if (!room) {
       await session.abortTransaction();
       return res
         .status(404)
         .json({ success: false, message: "Room not found" });
+    }
+
+    if (room.active !== true) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "Room is not active" });
+    }
+
+    if (room.type !== student.preferredRoomType) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Room type does not match student preference",
+      });
+    }
+
+    if (room.occupied === true) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "Room is full" });
     }
 
     if (Number(room.occupiedCount || 0) >= Number(room.capacity || 1)) {
@@ -194,12 +267,11 @@ exports.manualAllot = async (req, res) => {
     }
 
     room.occupiedCount = Number(room.occupiedCount || 0) + 1;
-    if (room.occupiedCount >= Number(room.capacity || 1)) {
-      room.occupied = true;
-    }
+    room.occupied = room.occupiedCount >= Number(room.capacity || 1);
 
+    student.roomId = room._id;
     student.roomAllocated = room.roomNumber;
-    student.status = "Allotted";
+    student.allotmentStatus = "ALLOTTED";
 
     await student.save({ session });
     await setup.save({ session });

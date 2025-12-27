@@ -901,9 +901,9 @@ const RoomAllotmentView = () => {
                   <td style={{ fontWeight: 500 }}>{item.fullName}</td>
                   <td style={{ color: 'var(--text-secondary)' }}>{item.preferredRoomType || 'N/A'}</td>
                   <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
-                  <td><Badge type={item.roomAllocated ? 'Allotted' : 'Pending'} /></td>
+                  <td><Badge type={(item.allotmentStatus || (item.roomAllocated ? 'ALLOTTED' : 'PENDING')) === 'ALLOTTED' ? 'Allotted' : 'Pending'} /></td>
                   <td className="text-right">
-                    <button className="action-btn" onClick={async () => {
+                    <button className="action-btn" disabled={(item.allotmentStatus || (item.roomAllocated ? 'ALLOTTED' : 'PENDING')) === 'ALLOTTED'} onClick={async () => {
                       setEditingStudent(item);
                       try {
                         const avail = await getAvailableRooms(item.preferredRoomType);
@@ -912,16 +912,9 @@ const RoomAllotmentView = () => {
                             setAvailableRooms(avail.data);
                             setSelectedRoomNumber(avail.data[0]?.roomNumber || '');
                           } else {
-                            // no rooms matching pref, fetch any available rooms as fallback
-                            const any = await getAvailableRooms();
-                            if (any.success && any.data && any.data.length > 0) {
-                              setAvailableRooms(any.data);
-                              setSelectedRoomNumber(any.data[0]?.roomNumber || '');
-                            } else {
-                              setAvailableRooms([]);
-                              setSelectedRoomNumber('');
-                              alert('No available rooms for this student');
-                            }
+                            setAvailableRooms([]);
+                            setSelectedRoomNumber('');
+                            alert('No available rooms for this student');
                           }
                         }
                       } catch (err) {

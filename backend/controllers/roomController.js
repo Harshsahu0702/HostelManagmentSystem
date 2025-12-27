@@ -4,7 +4,7 @@ exports.getRoomStats = async (req, res) => {
   try {
     // ✅ Filter by hostelId from JWT
     const setup = await HostelSetup.findOne({
-      hostelId: req.user.hostelId,
+      _id: req.user.hostelId,
       status: "COMPLETED",
     }).select("generatedRooms");
 
