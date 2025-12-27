@@ -1,5 +1,7 @@
 const Admin = require("../models/Admin");
 const HostelSetup = require("../models/HostelSetup");
+const StudentRegistration = require("../models/StudentRegistration");
+const ChatMessage = require("../models/ChatMessage");
 
 // ================= CREATE ADMIN =================
 // (PROTECTED – hostelId comes from logged-in admin JWT)
@@ -135,6 +137,98 @@ exports.getAdminByEmail = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching admin by email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// ================= GET ALL STUDENTS =================
+// (PROTECTED – hostel based)
+exports.getAllStudents = async (req, res) => {
+  try {
+    const hostelId = req.user.hostelId;
+    
+    const students = await StudentRegistration.find({ hostelId })
+      .select('-password')
+      .sort({ registrationDate: -1 });
+
+    res.json({
+      success: true,
+      data: students,
+    });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// ================= GET CHAT MESSAGES =================
+// (PROTECTED – hostel based)
+exports.getChatMessages = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const hostelId = req.user.hostelId;
+
+    const messages = await ChatMessage.find({
+      hostelId,
+      $or: [
+        { fromStudent: studentId },
+        { to: studentId }
+      ]
+    })
+    .populate('fromStudent', 'fullName email')
+    .sort({ createdAt: 1 });
+
+    res.json({
+      success: true,
+      data: messages,
+    });
+  } catch (error) {
+    console.error("Error fetching chat messages:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// ================= SEND MESSAGE =================
+// (PROTECTED – hostel based)
+exports.sendMessage = async (req, res) => {
+  try {
+    const { studentId, text } = req.body;
+    const hostelId = req.user.hostelId;
+
+    if (!studentId || !text) {
+      return res.status(400).json({
+        success: false,
+        message: "studentId and text are required",
+      });
+    }
+
+    const message = new ChatMessage({
+      hostelId,
+      to: studentId,
+      text,
+      fromStudent: null, // Admin message
+    });
+
+    await message.save();
+
+    const populatedMessage = await ChatMessage.findById(message._id)
+      .populate('fromStudent', ' fullName email');
+
+    res.status(201).json({
+      success: true,
+      data: populatedMessage,
+    });
+  } catch (error) {
+    console.error("Error sending message:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

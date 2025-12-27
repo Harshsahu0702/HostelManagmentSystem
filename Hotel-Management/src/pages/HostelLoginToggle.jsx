@@ -30,9 +30,9 @@ export default function HostelLoginToggle() {
         };
 
         const res = await axios.post(
-  "https://strivers-clone.onrender.com/api/auth/student/login",
-  studentCreds
-);
+          "http://localhost:5000/api/auth/student/login",
+          studentCreds
+        );
 
 // ✅ STORE JWT
 if (res?.data?.token) {
@@ -58,9 +58,9 @@ if (res?.data?.data) {
         };
 
         const res = await axios.post(
-  "https://strivers-clone.onrender.com/api/auth/admin/login",
-  adminCreds
-);
+          "http://localhost:5000/api/auth/admin/login",
+          adminCreds
+        );
 
 // ✅ STORE JWT
 if (res?.data?.token) {

@@ -25,7 +25,8 @@ exports.getNotificationsForStudent = async (req, res) => {
 // 📢 Complaints
 exports.createComplaint = async (req, res) => {
   try {
-    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId fullName");
+    console.log('Student found:', student);
     if (!student?.hostelId) {
       return res.status(400).json({ success: false, message: "Student hostelId not found" });
     }
@@ -33,15 +34,18 @@ exports.createComplaint = async (req, res) => {
     const payload = {
       ...req.body,
       studentId: req.user.id,
+      studentName: student.fullName,
       hostelId: student.hostelId,
     };
+    console.log('Complaint payload:', payload);
 
     const comp = new Complaint(payload);
     await comp.save();
 
     res.status(201).json({ success: true, data: comp });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error saving complaint" });
+    console.error('Error creating complaint:', err);
+    res.status(500).json({ success: false, message: err.message || "Error saving complaint" });
   }
 };
 
@@ -61,7 +65,8 @@ exports.getComplaintsForStudent = async (req, res) => {
 // 🛑 Anti-ragging
 exports.createAntiRagging = async (req, res) => {
   try {
-    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId fullName");
+    console.log('Student found for anti-ragging:', student);
     if (!student?.hostelId) {
       return res.status(400).json({ success: false, message: "Student hostelId not found" });
     }
@@ -69,15 +74,18 @@ exports.createAntiRagging = async (req, res) => {
     const payload = {
       ...req.body,
       studentId: req.user.id,
+      studentName: student.fullName,
       hostelId: student.hostelId,
     };
+    console.log('Anti-ragging payload:', payload);
 
     const r = new AntiRagging(payload);
     await r.save();
 
     res.status(201).json({ success: true, data: r });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error saving report" });
+    console.error('Error creating anti-ragging report:', err);
+    res.status(500).json({ success: false, message: err.message || "Error saving report" });
   }
 };
 

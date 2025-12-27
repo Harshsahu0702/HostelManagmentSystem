@@ -28,6 +28,7 @@ import {
   ClipboardCheck
 } from 'lucide-react';
 import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment } from '../services/api';
+import IssuesComplaints from './issues&complaints';
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -1771,44 +1772,7 @@ const StudentCredentialsView = () => {
     </>
   );
 };
-const IssuesView = () => (
-  <div>
-    <SectionHeader title="Issues & Complaints" subtitle="Track and resolve student complaints" />
-
-    <div>
-      {MOCK_ISSUES.map((issue) => (
-        <div key={issue.id} className="issue-card">
-          <div className="issue-content">
-            <div className={`stat-icon-wrapper ${issue.status === 'Resolved' ? 'text-green bg-green-light' : 'text-red bg-red-light'}`}>
-              {issue.status === 'Resolved' ? <CheckCircle /> : <AlertCircle />}
-            </div>
-            <div className="issue-details">
-              <div>
-                <h4>
-                  {issue.type} Issue
-                  <Badge type={issue.status} />
-                </h4>
-                <p style={{ color: 'var(--text-secondary)' }}>{issue.desc}</p>
-                <p className="issue-meta">Reported by {issue.student} (Room {issue.room}) • 2 days ago</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {issue.status !== 'Resolved' && (
-              <button className="btn-success">
-                Mark Resolved
-              </button>
-            )}
-            <button className="btn-outline">
-              Details
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+const IssuesView = () => <IssuesComplaints />;
 
 const ChatView = () => (
   <div className="chat-container">

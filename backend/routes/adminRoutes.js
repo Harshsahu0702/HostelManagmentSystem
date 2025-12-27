@@ -12,4 +12,9 @@ router.post("/create", authMiddleware, adminController.createAdmin);
 // 🔐 Get admin profile
 router.get("/:email", authMiddleware, adminController.getAdminByEmail);
 
+// Chat Routes
+router.get('/students', authMiddleware, adminController.getAllStudents);
+router.get('/chat/:studentId', authMiddleware, adminController.getChatMessages);
+router.post('/chat/send', authMiddleware, adminController.sendMessage);
+
 module.exports = router;
