@@ -21,6 +21,19 @@ const Chat = () => {
   const [loading, setLoading] = useState(false);
 
   const selectedAdminRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const isNearBottom = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return true;
+    const threshold = 120;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  };
+
+  const scrollToBottom = (behavior = "auto") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  };
 
   /* ================= SOCKET SETUP ================= */
   useEffect(() => {
@@ -37,11 +50,16 @@ const Chat = () => {
         String(message.senderId) === String(currentAdmin._id) ||
         String(message.receiverId) === String(currentAdmin._id)
       ) {
+        const shouldScroll = isNearBottom();
         setMessages((prev) => {
           // prevent duplicate messages
           if (prev.some((m) => m._id === message._id)) return prev;
           return [...prev, message];
         });
+
+        if (shouldScroll) {
+          setTimeout(() => scrollToBottom("smooth"), 0);
+        }
       }
     };
 
@@ -82,6 +100,7 @@ const Chat = () => {
       try {
         const res = await getPersonalMessages(selectedAdmin._id);
         setMessages(res.data || []);
+        setTimeout(() => scrollToBottom("auto"), 0);
       } catch (err) {
         console.error("Failed to load messages", err);
         setMessages([]);
@@ -110,6 +129,7 @@ const Chat = () => {
           if (prev.some((m) => m._id === created._id)) return prev;
           return [...prev, created];
         });
+        setTimeout(() => scrollToBottom("smooth"), 0);
       }
       // socket will update UI
     } catch (err) {
@@ -198,6 +218,7 @@ const Chat = () => {
 
         {/* MESSAGES */}
         <div
+          ref={messagesContainerRef}
           style={{
             flex: 1,
             padding: "20px",
@@ -251,6 +272,8 @@ const Chat = () => {
               No messages yet
             </div>
           )}
+
+          <div ref={messagesEndRef} style={{ height: 1 }} />
         </div>
 
         {/* INPUT */}

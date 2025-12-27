@@ -1832,6 +1832,20 @@ const ChatView = ({ adminProfile }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const isNearBottom = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return true;
+    const threshold = 120;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  };
+
+  const scrollToBottom = (behavior = 'auto') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  };
+
   useEffect(() => {
     if (!adminProfile?._id) return;
     joinUserRoom(adminProfile._id);
@@ -1866,6 +1880,7 @@ const ChatView = ({ adminProfile }) => {
       const currentStudent = selectedStudentRef.current;
       if (!currentStudent) return;
 
+      const shouldScroll = isNearBottom();
       setMessages(prev => {
         // prevent duplicates
         if (prev.find(m => m._id === message._id)) return prev;
@@ -1880,6 +1895,10 @@ const ChatView = ({ adminProfile }) => {
 
         return prev;
       });
+
+      if (shouldScroll) {
+        setTimeout(() => scrollToBottom('smooth'), 0);
+      }
     };
 
     socket.on("personalMessage", handler);
@@ -1898,6 +1917,7 @@ const ChatView = ({ adminProfile }) => {
         const response = await getPersonalMessages(selectedStudent._id);
         if (response.success) {
           setMessages(response.data || []);
+          setTimeout(() => scrollToBottom('auto'), 0);
         } else {
           console.error('Failed to fetch messages:', response.message);
         }
@@ -1923,6 +1943,7 @@ const ChatView = ({ adminProfile }) => {
           if (prev.some((m) => m._id === created._id)) return prev;
           return [...prev, created];
         });
+        setTimeout(() => scrollToBottom('smooth'), 0);
       }
     } catch (err) {
       console.error("Error sending message:", err);
@@ -2016,7 +2037,7 @@ const ChatView = ({ adminProfile }) => {
               </button>
             </div>
 
-            <div className="chat-messages">
+            <div className="chat-messages" ref={messagesContainerRef}>
               {messages.length > 0 ? (
                 messages.map((msg) => (
                   <div key={msg._id} className={`message ${msg.senderType === 'admin' ? 'sent' : 'received'}`}>
@@ -2031,6 +2052,7 @@ const ChatView = ({ adminProfile }) => {
                   No messages yet. Start a conversation!
                 </div>
               )}
+              <div ref={messagesEndRef} style={{ height: 1 }} />
             </div>
 
             <div className="chat-input-area">
