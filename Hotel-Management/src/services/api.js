@@ -24,7 +24,6 @@ export const getRoomStats = async () => {
 
 /* ================= STUDENT APIs ================= */
 export const registerStudent = async (studentData) => {
-  // studentData MUST include hostelId
   const res = await api.post("/students/register", studentData);
   return res.data;
 };
@@ -39,7 +38,7 @@ export const getStudentById = async (id) => {
   return res.data;
 };
 
-/* ================= PANEL APIs (JWT BASED) ================= */
+/* ================= PANEL APIs ================= */
 
 // Notifications
 export const getNotifications = async () => {
@@ -47,7 +46,7 @@ export const getNotifications = async () => {
   return res.data;
 };
 
-// Complaints
+// Complaints (Student)
 export const createComplaint = async (payload) => {
   const res = await api.post("/panel/complaints", payload);
   return res.data;
@@ -58,7 +57,16 @@ export const getComplaints = async () => {
   return res.data;
 };
 
-// Anti-ragging
+// Complaints (Admin)
+export const getComplaintsForAdmin = async (hostelId) => {
+  const hostelIdStr = hostelId?._id || hostelId?.toString() || hostelId;
+  const res = await api.get(
+    `/panel/complaints/admin?hostelId=${hostelIdStr}`
+  );
+  return res.data;
+};
+
+// Anti-ragging (Student)
 export const createAntiRagging = async (payload) => {
   const res = await api.post("/panel/antiragging", payload);
   return res.data;
@@ -69,24 +77,16 @@ export const getAntiRagging = async () => {
   return res.data;
 };
 
-// Admin-specific endpoints
-export const getComplaintsForAdmin = async (hostelId) => {
-  console.log('getComplaintsForAdmin received hostelId:', hostelId, typeof hostelId);
-  const hostelIdStr = hostelId?._id || hostelId?.toString() || hostelId;
-  console.log('Converted hostelId string:', hostelIdStr);
-  const res = await api.get(`/panel/complaints/admin?hostelId=${hostelIdStr}`);
-  return res.data;
-};
-
+// Anti-ragging (Admin)
 export const getAntiRaggingForAdmin = async (hostelId) => {
-  console.log('getAntiRaggingForAdmin received hostelId:', hostelId, typeof hostelId);
   const hostelIdStr = hostelId?._id || hostelId?.toString() || hostelId;
-  console.log('Converted hostelId string:', hostelIdStr);
-  const res = await api.get(`/panel/antiragging/admin?hostelId=${hostelIdStr}`);
+  const res = await api.get(
+    `/panel/antiragging/admin?hostelId=${hostelIdStr}`
+  );
   return res.data;
 };
 
-// Mess menu (hostel from JWT)
+// Mess
 export const getMessMenu = async () => {
   const res = await api.get("/panel/mess");
   return res.data;
@@ -109,17 +109,6 @@ export const getFees = async () => {
   return res.data;
 };
 
-// Chat
-export const postChatMessage = async (payload) => {
-  const res = await api.post("/panel/chat", payload);
-  return res.data;
-};
-
-export const getChat = async () => {
-  const res = await api.get("/panel/chat");
-  return res.data;
-};
-
 // Feedback
 export const postFeedback = async (payload) => {
   const res = await api.post("/panel/feedback", payload);
@@ -131,6 +120,30 @@ export const getFeedback = async () => {
   return res.data;
 };
 
+/* ================= CHAT APIs (NEW SYSTEM) ================= */
+
+// PERSONAL CHAT (student ↔ admin)
+export const sendPersonalMessage = async (receiverId, text) => {
+  const res = await api.post("/chat/personal", { receiverId, text });
+  return res.data;
+};
+
+export const getPersonalMessages = async (receiverId) => {
+  const res = await api.get(`/chat/personal/${receiverId}`);
+  return res.data;
+};
+
+// GROUP CHAT
+export const sendGroupMessage = async (text) => {
+  const res = await api.post("/chat/group/send", { text });
+  return res.data;
+};
+
+export const getGroupMessages = async () => {
+  const res = await api.get("/chat/group");
+  return res.data;
+};
+
 /* ================= ADMIN APIs ================= */
 export const getAdminByEmail = async (email) => {
   const res = await api.get(`/admins/${encodeURIComponent(email)}`);
@@ -139,22 +152,6 @@ export const getAdminByEmail = async (email) => {
 
 export const createAdmin = async (adminData) => {
   const res = await api.post("/admins/create", adminData);
-  return res.data;
-};
-
-/* ================= ADMIN CHAT APIs ================= */
-export const getAllStudentsForChat = async () => {
-  const res = await api.get("/admin/students");
-  return res.data;
-};
-
-export const getChatMessagesWithStudent = async (studentId) => {
-  const res = await api.get(`/admin/chat/${studentId}`);
-  return res.data;
-};
-
-export const sendMessageToStudent = async (studentId, text) => {
-  const res = await api.post("/admin/chat/send", { studentId, text });
   return res.data;
 };
 
@@ -183,5 +180,11 @@ export const manualAllot = async (studentId, roomNumber) => {
 
 export const removeAllotment = async (studentId) => {
   const res = await api.post("/admin/remove-allotment", { studentId });
+  return res.data;
+};
+
+// ================= CHAT (STUDENT) =================
+export const getAdminsForChat = async () => {
+  const res = await api.get("/chat/admins");
   return res.data;
 };

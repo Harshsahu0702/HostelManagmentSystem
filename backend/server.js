@@ -9,6 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// routes imports
 const authRoutes = require("./routes/authRoutes");
 const hostelSetupRoutes = require("./routes/hostelSetup");
 const roomRoutes = require("./routes/roomRoutes");
@@ -16,7 +17,7 @@ const studentRoutes = require("./routes/studentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminAllotRoutes = require("./routes/adminAllotRoutes");
 const panelRoutes = require("./routes/panelRoutes");
-
+const chatRoutes = require("./routes/chatRoutes"); // 🔥 NEW
 
 // routes
 app.use("/api/auth", authRoutes);
@@ -26,6 +27,7 @@ app.use("/api/students", studentRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/admin", adminAllotRoutes);
 app.use("/api/panel", panelRoutes);
+app.use("/api/chat", chatRoutes); // 🔥 NEW
 
 // DB
 const mongoURI =

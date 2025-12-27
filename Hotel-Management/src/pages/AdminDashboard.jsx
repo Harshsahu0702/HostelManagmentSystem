@@ -27,7 +27,7 @@ import {
   DollarSign,
   ClipboardCheck
 } from 'lucide-react';
-import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment, getAllStudentsForChat, getChatMessagesWithStudent, sendMessageToStudent } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment, sendPersonalMessage, getPersonalMessages } from '../services/api';
 import IssuesComplaints from './issues&complaints';
 
 // --- Mock Data Constants ---
@@ -1832,7 +1832,7 @@ const ChatView = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await getAllStudentsForChat();
+        const response = await getAllStudents();  // getAllStudentsForchat() se getAllStudents()
         if (response.success) {
           setStudents(response.data || []);
           if (response.data && response.data.length > 0) {
@@ -1858,7 +1858,7 @@ const ChatView = () => {
 
     const fetchMessages = async () => {
       try {
-        const response = await getChatMessagesWithStudent(selectedStudent._id);
+        const response = await getPersonalMessages(selectedStudent._id);
         if (response.success) {
           setMessages(response.data || []);
         } else {
@@ -1876,7 +1876,7 @@ const ChatView = () => {
     if (!newMessage.trim() || !selectedStudent) return;
 
     try {
-      const response = await sendMessageToStudent(selectedStudent._id, newMessage);
+      const response = await sendPersonalMessage(selectedStudent._id, newMessage);
       if (response.success) {
         // Add the new message to the messages list
         const newMsg = {
@@ -1886,7 +1886,9 @@ const ChatView = () => {
           fromStudent: null, // Admin message
           createdAt: new Date()
         };
-        setMessages([...messages, newMsg]);
+        setNewMessage('');
+        const refreshed = await getPersonalMessages(selectedStudent._id);
+        if (refreshed.success) setMessages(refreshed.data);
         setNewMessage('');
       } else {
         console.error('Failed to send message:', response.message);
@@ -1986,9 +1988,9 @@ const ChatView = () => {
             <div className="chat-messages">
               {messages.length > 0 ? (
                 messages.map((msg) => (
-                  <div key={msg._id} className={`message ${msg.fromStudent ? 'received' : 'sent'}`}>
+                  <div key={msg._id} className={`message ${msg.senderType === 'admin' ? 'sent' : 'received'}`}>
                     <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
-                    <span className="msg-time" style={{ color: msg.fromStudent ? '#9ca3af' : '#e0e7ff' }}>
+                    <span className="msg-time" style={{ color: msg.senderType === 'admin' ? '#e0e7ff' : '#9ca3af' }}>
                       {formatTime(msg.createdAt)}
                     </span>
                   </div>
