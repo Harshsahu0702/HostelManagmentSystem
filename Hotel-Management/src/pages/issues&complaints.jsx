@@ -10,9 +10,10 @@ import {
   MessageSquare,
   ArrowUpDown
 } from 'lucide-react';
-import { getComplaints, getAntiRagging } from '../services/api';
+import { getComplaintsForAdmin, getAntiRaggingForAdmin } from '../services/api';
 
-const IssuesComplaints = () => {
+const IssuesComplaints = ({ hostelId }) => {
+  console.log('IssuesComplaints received hostelId:', hostelId);
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,10 +21,16 @@ const IssuesComplaints = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!hostelId) {
+        console.log('No hostelId provided');
+        setLoading(false);
+        return;
+      }
+      
       try {
         const [complaintsRes, antiRaggingRes] = await Promise.all([
-          getComplaints(),
-          getAntiRagging()
+          getComplaintsForAdmin(hostelId),
+          getAntiRaggingForAdmin(hostelId)
         ]);
         
         const merged = [
@@ -56,7 +63,7 @@ const IssuesComplaints = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [hostelId]);
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter(item => {

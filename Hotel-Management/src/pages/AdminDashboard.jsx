@@ -2282,7 +2282,9 @@ const AdminDashboard = () => {
       case 'room-allotment': return <RoomAllotmentView />;
       case 'registration': return <StudentRegistrationView />;
       case 'credentials': return <StudentCredentialsView />;
-      case 'issues': return <IssuesComplaints />; 
+      case 'issues': 
+        console.log('AdminDashboard adminProfile for issues:', adminProfile);
+        return <IssuesComplaints hostelId={adminProfile?.hostelId} />; 
       case 'chat': return <ChatView />;
       case 'mess-menu': return <MessMenuView />;
       case 'mess-reviews': return <MessReviewsView />;

@@ -32,4 +32,8 @@ router.get("/chat", authMiddleware, panel.getChatForStudent);
 router.post("/feedback", authMiddleware, panel.postFeedback);
 router.get("/feedback", authMiddleware, panel.getFeedbackForStudent);
 
+// Admin endpoints (add after line 15)
+router.get("/complaints/admin", authMiddleware, panel.getComplaintsForAdmin);
+router.get("/antiragging/admin", authMiddleware, panel.getAntiRaggingForAdmin);
+
 module.exports = router;

@@ -69,6 +69,23 @@ export const getAntiRagging = async () => {
   return res.data;
 };
 
+// Admin-specific endpoints
+export const getComplaintsForAdmin = async (hostelId) => {
+  console.log('getComplaintsForAdmin received hostelId:', hostelId, typeof hostelId);
+  const hostelIdStr = hostelId?._id || hostelId?.toString() || hostelId;
+  console.log('Converted hostelId string:', hostelIdStr);
+  const res = await api.get(`/panel/complaints/admin?hostelId=${hostelIdStr}`);
+  return res.data;
+};
+
+export const getAntiRaggingForAdmin = async (hostelId) => {
+  console.log('getAntiRaggingForAdmin received hostelId:', hostelId, typeof hostelId);
+  const hostelIdStr = hostelId?._id || hostelId?.toString() || hostelId;
+  console.log('Converted hostelId string:', hostelIdStr);
+  const res = await api.get(`/panel/antiragging/admin?hostelId=${hostelIdStr}`);
+  return res.data;
+};
+
 // Mess menu (hostel from JWT)
 export const getMessMenu = async () => {
   const res = await api.get("/panel/mess");

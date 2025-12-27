@@ -246,3 +246,26 @@ exports.getFeedbackForStudent = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching feedback" });
   }
 };
+// Admin endpoints for complaints by hostel ID
+exports.getComplaintsForAdmin = async (req, res) => {
+  try {
+    const { hostelId } = req.query;
+    console.log('getComplaintsForAdmin called with hostelId:', hostelId);
+    const list = await Complaint.find({ hostelId }).sort({ createdAt: -1 });
+    console.log('Found complaints:', list.length);
+    res.json({ success: true, data: list });
+  } catch (err) {
+    console.error('Error in getComplaintsForAdmin:', err);
+    res.status(500).json({ success: false, message: "Error fetching complaints" });
+  }
+};
+
+exports.getAntiRaggingForAdmin = async (req, res) => {
+  try {
+    const { hostelId } = req.query;
+    const list = await AntiRagging.find({ hostelId }).sort({ createdAt: -1 });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error fetching anti-ragging reports" });
+  }
+};
