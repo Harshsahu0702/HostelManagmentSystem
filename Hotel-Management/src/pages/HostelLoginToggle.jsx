@@ -30,9 +30,20 @@ export default function HostelLoginToggle() {
         };
 
         const res = await axios.post(
-          "http://localhost:5000/api/auth/student/login",
-          studentCreds
-        );
+  "http://localhost:5000/api/auth/student/login",
+  studentCreds
+);
+
+// ✅ STORE JWT
+if (res?.data?.token) {
+  localStorage.setItem("token", res.data.token);
+}
+
+// persist student profile
+if (res?.data?.data) {
+  localStorage.setItem("studentData", JSON.stringify(res.data.data));
+}
+
 
         // persist student profile so app can load StudentContext
         if (res?.data?.data) {
@@ -47,17 +58,21 @@ export default function HostelLoginToggle() {
         };
 
         const res = await axios.post(
-          "http://localhost:5000/api/auth/admin/login",
-          adminCreds
-        );
+  "http://localhost:5000/api/auth/admin/login",
+  adminCreds
+);
+
+// ✅ STORE JWT
+if (res?.data?.token) {
+  localStorage.setItem("token", res.data.token);
+}
+
+// persist email
+localStorage.setItem("adminEmail", adminCreds.email);
+
         // persist email locally so dashboard can load profile even after refresh
         localStorage.setItem('adminEmail', adminCreds.email);
-        navigate("/admin-dashboard", {
-          state: {
-            email: adminCreds.email,
-            password: adminCreds.password,
-          },
-        });
+        navigate("/admin-dashboard");
       }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useStudent } from '../../contexts/StudentContext';
-import { getMessMenuByHostel } from '../../services/api';
+import { getMessMenu } from '../../services/api';
 
 const Mess = () => {
   const { student } = useStudent() || {};
@@ -15,7 +15,7 @@ const Mess = () => {
       setMenuLoading(true);
       setError(null);
       try {
-        const res = await getMessMenuByHostel(student?.hostelId || '');
+        const res = await getMessMenu(student?.hostelId || '');
         setMenu(res.data?.items || []);
       } catch (err) {
         setMenu([]);

@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const studentRegistrationSchema = new mongoose.Schema({
   // Student Information
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'HostelSetup', required: true },
   fullName: { type: String, required: true },
-  rollNumber: { type: String, required: true, unique: true },
+  rollNumber: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
   address: { type: String, required: true },

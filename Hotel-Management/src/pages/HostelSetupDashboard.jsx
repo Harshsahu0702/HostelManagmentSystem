@@ -251,7 +251,7 @@ const nextStep = async () => {
       }
 
       await axios.post(
-        "http://localhost:5000/api/admins/create",
+        "http://localhost:5000/api/admins/create-super-admin",
         {
           name: formData.adminName,
           email: formData.adminEmail,

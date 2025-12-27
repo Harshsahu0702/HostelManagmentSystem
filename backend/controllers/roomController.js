@@ -1,25 +1,34 @@
-const HostelSetup = require('../models/HostelSetup');
+const HostelSetup = require("../models/HostelSetup");
 
 exports.getRoomStats = async (req, res) => {
   try {
-    const setup = await HostelSetup.findOne({ status: "COMPLETED" }).select('generatedRooms');
-    
+    // ✅ Filter by hostelId from JWT
+    const setup = await HostelSetup.findOne({
+      hostelId: req.user.hostelId,
+      status: "COMPLETED",
+    }).select("generatedRooms");
+
     if (!setup || !setup.generatedRooms) {
       return res.json({
         totalRooms: 0,
-        occupiedRooms: 0
+        occupiedRooms: 0,
       });
     }
 
     const totalRooms = setup.generatedRooms.length;
-    const occupiedRooms = setup.generatedRooms.filter(room => room.occupied).length;
+    const occupiedRooms = setup.generatedRooms.filter(
+      (room) => room.occupied
+    ).length;
 
     res.json({
       totalRooms,
-      occupiedRooms
+      occupiedRooms,
     });
   } catch (error) {
-    console.error('Error fetching room stats:', error);
-    res.status(500).json({ error: 'Failed to fetch room statistics' });
+    console.error("Error fetching room stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch room statistics",
+    });
   }
 };

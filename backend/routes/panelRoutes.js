@@ -1,34 +1,35 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const panel = require('../controllers/panelController');
+const panel = require("../controllers/panelController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Notifications
-router.get('/notifications/:studentId', panel.getNotificationsForStudent);
+// 🔔 Notifications (student specific)
+router.get("/notifications", authMiddleware, panel.getNotificationsForStudent);
 
-// Complaints
-router.post('/complaints', panel.createComplaint);
-router.get('/complaints/:studentId', panel.getComplaintsForStudent);
+// 📢 Complaints
+router.post("/complaints", authMiddleware, panel.createComplaint);
+router.get("/complaints", authMiddleware, panel.getComplaintsForStudent);
 
-// Anti-ragging
-router.post('/antiragging', panel.createAntiRagging);
-router.get('/antiragging/:studentId', panel.getAntiRaggingForStudent);
+// 🛑 Anti-ragging
+router.post("/antiragging", authMiddleware, panel.createAntiRagging);
+router.get("/antiragging", authMiddleware, panel.getAntiRaggingForStudent);
 
-// Mess menu
-router.get('/mess/:hostelId', panel.getMessMenu);
+// 🍽️ Mess menu (hostel based)
+router.get("/mess", authMiddleware, panel.getMessMenu);
 
-// Departure
-router.post('/departure', panel.createDeparture);
-router.get('/departure/:studentId', panel.getDeparturesForStudent);
+// ✈️ Departure
+router.post("/departure", authMiddleware, panel.createDeparture);
+router.get("/departure", authMiddleware, panel.getDeparturesForStudent);
 
-// Fees
-router.get('/fees/:studentId', panel.getFeesForStudent);
+// 💰 Fees
+router.get("/fees", authMiddleware, panel.getFeesForStudent);
 
-// Chat
-router.post('/chat', panel.postChatMessage);
-router.get('/chat/:studentId', panel.getChatForStudent);
+// 💬 Chat
+router.post("/chat", authMiddleware, panel.postChatMessage);
+router.get("/chat", authMiddleware, panel.getChatForStudent);
 
-// Feedback
-router.post('/feedback', panel.postFeedback);
-router.get('/feedback/:studentId', panel.getFeedbackForStudent);
+// ⭐ Feedback
+router.post("/feedback", authMiddleware, panel.postFeedback);
+router.get("/feedback", authMiddleware, panel.getFeedbackForStudent);
 
 module.exports = router;

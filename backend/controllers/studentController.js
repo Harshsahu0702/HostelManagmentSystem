@@ -1,107 +1,135 @@
-const StudentRegistration = require('../models/StudentRegistration');
+const StudentRegistration = require("../models/StudentRegistration");
 
-// Register a new student
+// ================= REGISTER A NEW STUDENT =================
+// (PUBLIC – called by admin panel, hostelId must come from req.body or req.user)
 exports.registerStudent = async (req, res) => {
-    try {
-        const {
-            fullName,
-            rollNumber,
-            email,
-            phoneNumber,
-            address,
-            course,
-            year,
-            guardianName,
-            relationship,
-            guardianEmail,
-            guardianPhone,
-            preferredRoomType
-        } = req.body;
+  try {
+    const {
+      hostelId, // ✅ REQUIRED
+      fullName,
+      rollNumber,
+      email,
+      phoneNumber,
+      address,
+      course,
+      year,
+      guardianName,
+      relationship,
+      guardianEmail,
+      guardianPhone,
+      preferredRoomType,
+    } = req.body;
 
-        // Check if student with same email or roll number already exists
-        const existingStudent = await StudentRegistration.findOne({
-            $or: [
-                { email },
-                { rollNumber }
-            ]
-        });
-
-        if (existingStudent) {
-            return res.status(400).json({
-                success: false,
-                message: 'Student with this email or roll number already exists.'
-            });
-        }
-
-        // Create new student with phone number as password
-        const newStudent = new StudentRegistration({
-            fullName,
-            rollNumber,
-            email,
-            phoneNumber,
-            address,
-            course,
-            year,
-            guardianName,
-            relationship,
-            guardianEmail,
-            guardianPhone,
-            preferredRoomType,
-            password: phoneNumber // Using phone number as password
-        });
-
-        await newStudent.save();
-
-        
-        const studentData = newStudent.toObject();
-        
-
-        res.status(201).json({
-            success: true,
-            message: 'Student registered successfully',
-            data: studentData
-        });
-
-    } catch (error) {
-        console.error('Error registering student:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error registering student',
-            error: error.message
-        });
+    if (!hostelId) {
+      return res.status(400).json({
+        success: false,
+        message: "hostelId is required",
+      });
     }
+
+    // Check if student with same email or roll number already exists IN SAME HOSTEL
+    const existingStudent = await StudentRegistration.findOne({
+      hostelId,
+      $or: [{ email }, { rollNumber }],
+    });
+
+    if (existingStudent) {
+      return res.status(400).json({
+        success: false,
+        message: "Student with this email or roll number already exists.",
+      });
+    }
+
+    // Create new student
+    const newStudent = new StudentRegistration({
+      hostelId, // ✅ STORED
+      fullName,
+      rollNumber,
+      email,
+      phoneNumber,
+      address,
+      course,
+      year,
+      guardianName,
+      relationship,
+      guardianEmail,
+      guardianPhone,
+      preferredRoomType,
+      password: phoneNumber, // using phone number as password
+    });
+
+    await newStudent.save();
+
+    const studentData = newStudent.toObject();
+    delete studentData.password;
+
+    res.status(201).json({
+      success: true,
+      message: "Student registered successfully",
+      data: studentData,
+    });
+  } catch (error) {
+    console.error("Error registering student:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error registering student",
+      error: error.message,
+    });
+  }
 };
 
-// Get all students (for admin)
+// ================= GET ALL STUDENTS =================
+// (PROTECTED – hostel-based data)
 exports.getAllStudents = async (req, res) => {
-    try {
-        const students = await StudentRegistration.find({}, { password: 0 }); // Exclude passwords
-        res.status(200).json({
-            success: true,
-            count: students.length,
-            data: students
-        });
-    } catch (error) {
-        console.error('Error fetching students:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching students',
-            error: error.message
-        });
-    }
+  try {
+    const students = await StudentRegistration.find(
+      { hostelId: req.user.hostelId }, // ✅ FILTER BY HOSTEL
+      { password: 0 }
+    );
+
+    res.status(200).json({
+      success: true,
+      count: students.length,
+      data: students,
+    });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching students",
+      error: error.message,
+    });
+  }
 };
 
-// Get a single student by ID
+// ================= GET SINGLE STUDENT BY ID =================
+// (PROTECTED – hostel-based + id-based)
 exports.getStudentById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const student = await StudentRegistration.findById(id, { password: 0 }); // exclude password
-        if (!student) {
-            return res.status(404).json({ success: false, message: 'Student not found' });
-        }
-        res.status(200).json({ success: true, data: student });
-    } catch (error) {
-        console.error('Error fetching student by id:', error);
-        res.status(500).json({ success: false, message: 'Error fetching student', error: error.message });
+  try {
+    const { id } = req.params;
+
+    const student = await StudentRegistration.findOne(
+      { _id: id, hostelId: req.user.hostelId }, // ✅ DOUBLE CHECK
+      { password: 0 }
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
     }
+
+    res.status(200).json({
+      success: true,
+      data: student,
+    });
+  } catch (error) {
+    console.error("Error fetching student by id:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching student",
+      error: error.message,
+    });
+  }
 };

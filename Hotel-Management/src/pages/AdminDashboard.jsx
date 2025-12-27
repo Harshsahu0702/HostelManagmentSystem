@@ -1,30 +1,31 @@
+import { jwtDecode } from "jwt-decode";
 import StudentDetailsModal from "./StudentDetailsModal";
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  LayoutDashboard, 
-  Building, 
-  BedDouble, 
-  UserPlus, 
-  Shield, 
-  AlertCircle, 
+import {
+  LayoutDashboard,
+  Building,
+  BedDouble,
+  UserPlus,
+  Shield,
+  AlertCircle,
   MessageSquare,
-  X, 
-  Bell, 
-  Search, 
+  X,
+  Bell,
+  Search,
   LogOut,
   CheckCircle,
   Clock,
   Trash2,
   Send,
   Users,
-  Utensils,     
-  ChevronDown,  
-  Star,         
-  DollarSign,   
-  ClipboardCheck 
+  Utensils,
+  ChevronDown,
+  Star,
+  DollarSign,
+  ClipboardCheck
 } from 'lucide-react';
 import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot } from '../services/api';
 
@@ -658,11 +659,11 @@ const DashboardView = ({ setActiveTab }) => {
         const [roomStats, studentsRes, issuesRes] = await Promise.all([
           getRoomStats().catch(() => ({ occupiedRooms: 0, totalRooms: 0 })),
           getAllStudents().catch(() => ({ success: false, data: [] })),
-          axios.get('http://localhost:5000/api/issues').catch(() => ({ data: [] }))
+          // axios.get('http://localhost:5000/api/issues').catch(() => ({ data: [] }))
         ]);
 
         const students = studentsRes.success ? studentsRes.data : [];
-        const issues = issuesRes.data || [];
+        const issues = [];
         const openIssues = issues.filter(i => i.status === 'Open');
 
         setStats([
@@ -680,11 +681,11 @@ const DashboardView = ({ setActiveTab }) => {
         })));
 
         setPendingIssues(openIssues.slice(0, 3).map(i => ({
-            id: i._id || i.id,
-            type: i.type || 'General',
-            desc: i.description || i.desc || 'No description',
-            room: i.roomNumber || i.room || 'N/A',
-            status: i.status
+          id: i._id || i.id,
+          type: i.type || 'General',
+          desc: i.description || i.desc || 'No description',
+          room: i.roomNumber || i.room || 'N/A',
+          status: i.status
         })));
 
       } catch (err) {
@@ -700,7 +701,7 @@ const DashboardView = ({ setActiveTab }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
-        <button 
+        <button
           onClick={() => setActiveTab('registration')}
           style={{
             background: 'linear-gradient(45deg, #4f46e5, #7c3aed)',
@@ -745,7 +746,7 @@ const DashboardView = ({ setActiveTab }) => {
       </div>
       <div className="grid-4" style={{ marginBottom: '2rem' }}>
         {stats.map((stat, idx) => (
-          <StatCard 
+          <StatCard
             key={idx}
             title={stat.title}
             value={stat.value}
@@ -777,7 +778,7 @@ const DashboardView = ({ setActiveTab }) => {
                   </tr>
                 ))}
                 {recentAllocations.length === 0 && (
-                  <tr><td colSpan="3" style={{textAlign: 'center', padding: '1rem'}}>No recent allocations</td></tr>
+                  <tr><td colSpan="3" style={{ textAlign: 'center', padding: '1rem' }}>No recent allocations</td></tr>
                 )}
               </tbody>
             </table>
@@ -848,96 +849,96 @@ const RoomAllotmentView = () => {
 
 
   return (
-  <div>
-    <SectionHeader title="Room Allotment" subtitle="Manage student room assignments" />
-    
-    <div className="card">
-      <div className="filter-header">
-        <div className="search-wrapper">
-          <Search className="search-icon" />
-          <input type="text" placeholder="Search student..." className="search-input" />
-        </div>
-        <div className="btn-group">
-          <button className="btn-outline">Filter</button>
-          <button className="btn-primary" style={{ width: 'auto' }} onClick={async () => {
-            setAutoLoading(true);
-            try {
-              const res = await autoAllot();
-              // show summary and optional details count
-              alert(`Auto-Allot completed. Allotted: ${res.summary.allotted}, Failed: ${res.summary.failed}`);
-              if (res.details && res.details.length > 0) {
-                console.debug('Auto-Allot details:', res.details.slice(0, 20));
-              }
-              // refresh students list
-              const r = await getAllStudents();
-              if (r.success) setStudents(r.data);
-            } catch (err) {
-              console.error(err);
-              alert(err.message || 'Auto allot failed');
-            } finally {
-              setAutoLoading(false);
-            }
-          }} disabled={autoLoading}>{autoLoading ? 'Processing...' : 'Auto-Allot'}</button>
-        </div>
-      </div>
+    <div>
+      <SectionHeader title="Room Allotment" subtitle="Manage student room assignments" />
 
-      <div className="table-responsive">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Student Name</th>
-              <th>Room Type Pref</th>
-              <th>Allocated Room</th>
-              <th>Status</th>
-              <th className="text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-                {students.map((item) => (
-              <tr key={item._id || item.id}>
-                <td style={{ color: 'var(--text-secondary)' }}>#{item.rollNumber || item.id}</td>
-                <td style={{ fontWeight: 500 }}>{item.fullName}</td>
-                <td style={{ color: 'var(--text-secondary)' }}>{item.preferredRoomType || 'N/A'}</td>
-                <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
-                <td><Badge type={item.roomAllocated ? 'Allotted' : 'Pending'} /></td>
-                <td className="text-right">
-                  <button className="action-btn" onClick={async () => {
-                    setEditingStudent(item);
-                    try {
-                      const avail = await getAvailableRooms(item.preferredRoomType);
-                      if (avail.success) {
-                        if (avail.data && avail.data.length > 0) {
-                          setAvailableRooms(avail.data);
-                          setSelectedRoomNumber(avail.data[0]?.roomNumber || '');
-                        } else {
-                          // no rooms matching pref, fetch any available rooms as fallback
-                          const any = await getAvailableRooms();
-                          if (any.success && any.data && any.data.length > 0) {
-                            setAvailableRooms(any.data);
-                            setSelectedRoomNumber(any.data[0]?.roomNumber || '');
+      <div className="card">
+        <div className="filter-header">
+          <div className="search-wrapper">
+            <Search className="search-icon" />
+            <input type="text" placeholder="Search student..." className="search-input" />
+          </div>
+          <div className="btn-group">
+            <button className="btn-outline">Filter</button>
+            <button className="btn-primary" style={{ width: 'auto' }} onClick={async () => {
+              setAutoLoading(true);
+              try {
+                const res = await autoAllot();
+                // show summary and optional details count
+                alert(`Auto-Allot completed. Allotted: ${res.summary.allotted}, Failed: ${res.summary.failed}`);
+                if (res.details && res.details.length > 0) {
+                  console.debug('Auto-Allot details:', res.details.slice(0, 20));
+                }
+                // refresh students list
+                const r = await getAllStudents();
+                if (r.success) setStudents(r.data);
+              } catch (err) {
+                console.error(err);
+                alert(err.message || 'Auto allot failed');
+              } finally {
+                setAutoLoading(false);
+              }
+            }} disabled={autoLoading}>{autoLoading ? 'Processing...' : 'Auto-Allot'}</button>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Student Name</th>
+                <th>Room Type Pref</th>
+                <th>Allocated Room</th>
+                <th>Status</th>
+                <th className="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((item) => (
+                <tr key={item._id || item.id}>
+                  <td style={{ color: 'var(--text-secondary)' }}>#{item.rollNumber || item.id}</td>
+                  <td style={{ fontWeight: 500 }}>{item.fullName}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{item.preferredRoomType || 'N/A'}</td>
+                  <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
+                  <td><Badge type={item.roomAllocated ? 'Allotted' : 'Pending'} /></td>
+                  <td className="text-right">
+                    <button className="action-btn" onClick={async () => {
+                      setEditingStudent(item);
+                      try {
+                        const avail = await getAvailableRooms(item.preferredRoomType);
+                        if (avail.success) {
+                          if (avail.data && avail.data.length > 0) {
+                            setAvailableRooms(avail.data);
+                            setSelectedRoomNumber(avail.data[0]?.roomNumber || '');
                           } else {
-                            setAvailableRooms([]);
-                            setSelectedRoomNumber('');
-                            alert('No available rooms for this student');
+                            // no rooms matching pref, fetch any available rooms as fallback
+                            const any = await getAvailableRooms();
+                            if (any.success && any.data && any.data.length > 0) {
+                              setAvailableRooms(any.data);
+                              setSelectedRoomNumber(any.data[0]?.roomNumber || '');
+                            } else {
+                              setAvailableRooms([]);
+                              setSelectedRoomNumber('');
+                              alert('No available rooms for this student');
+                            }
                           }
                         }
+                      } catch (err) {
+                        console.error(err);
+                        alert('Failed to fetch available rooms');
                       }
-                    } catch (err) {
-                      console.error(err);
-                      alert('Failed to fetch available rooms');
-                    }
-                  }}>Edit</button>
-                </td>
-              </tr>
-            ))}
-            {students.length === 0 && !loading && (
-              <tr><td colSpan="6" style={{textAlign: 'center', padding: '1rem'}}>No students found</td></tr>
-            )}
-          </tbody>
-        </table>
+                    }}>Edit</button>
+                  </td>
+                </tr>
+              ))}
+              {students.length === 0 && !loading && (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '1rem' }}>No students found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
       {/* Manual Allot Modal */}
       {editingStudent && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
@@ -969,7 +970,7 @@ const RoomAllotmentView = () => {
 //create admin
 const CreateAdminView = () => {
   const [formData, setFormData] = useState({
-    hostelId: '',
+    hostelId: localStorage.getItem("hostelId"),
     email: '',
     password: '',
     name: '',
@@ -1013,7 +1014,7 @@ const CreateAdminView = () => {
       setMessage('Admin created successfully');
 
       setFormData({
-        hostelId: '',
+        hostelId: localStorage.getItem("hostelId"), //
         email: '',
         password: '',
         name: '',
@@ -1181,47 +1182,91 @@ const StudentRegistrationView = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus({ success: null, message: '' });
 
-    try {
-      const response = await registerStudent(formData);
-      setSubmitStatus({
-        success: true,
-        message: 'Student registered successfully!'
-      });
-      // Reset form after successful submission
-      setFormData({
-        fullName: '',
-        rollNumber: '',
-        email: '',
-        phoneNumber: '',
-        address: '',
-        course: 'Computer Science',
-        year: '1st Year',
-        guardianName: '',
-        relationship: 'Father',
-        guardianEmail: '',
-        guardianPhone: '',
-        preferredRoomType: 'Single (AC)'
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setSubmitStatus({ success: null, message: "" });
+
+  try {
+    // ✅ GET TOKEN
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       setSubmitStatus({
         success: false,
-        message: error.message || 'Failed to register student. Please try again.'
+        message: "Login expired. Please login again.",
       });
-    } finally {
       setIsSubmitting(false);
+      return;
     }
-  };
+
+    // ✅ DECODE TOKEN TO GET hostelId
+    const decoded = jwtDecode(token);
+    const hostelId = decoded?.hostelId;
+
+    if (!hostelId) {
+      setSubmitStatus({
+        success: false,
+        message: "Hostel ID missing. Please login again.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // ✅ DEBUG LOG (VERY IMPORTANT)
+    console.log("📤 Sending student data:", {
+      ...formData,
+      hostelId,
+    });
+
+    // ✅ API CALL
+    await registerStudent({
+      ...formData,
+      hostelId,
+    });
+
+    // ✅ SUCCESS
+    setSubmitStatus({
+      success: true,
+      message: "Student registered successfully!",
+    });
+
+    // ✅ RESET FORM
+    setFormData({
+      fullName: "",
+      rollNumber: "",
+      email: "",
+      phoneNumber: "",
+      address: "",
+      course: "Computer Science",
+      year: "1st Year",
+      guardianName: "",
+      relationship: "Father",
+      guardianEmail: "",
+      guardianPhone: "",
+      preferredRoomType: "Single (AC)",
+    });
+
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    setSubmitStatus({
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        "Failed to register student. Please try again.",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <div className="content-container">
       <SectionHeader title="Student Registration" subtitle="Register new student to the hostel" />
-      
+
       {submitStatus.message && (
         <div className={`alert ${submitStatus.success ? 'alert-success' : 'alert-error'}`}>
           {submitStatus.message}
@@ -1486,7 +1531,7 @@ const StudentCredentialsView = () => {
 
   const handleShowMore = (student) => {
     console.log('Student data:', student); // Debug log
-    
+
     const studentDetails = {
       ...student,
       name: student.fullName || `${student.firstName || ''} ${student.lastName || ''}`.trim(),
@@ -1498,15 +1543,15 @@ const StudentCredentialsView = () => {
       course: student.course || 'N/A',
       year: student.year || 'N/A',
       department: 'School of ' + (
-        student.course === 'Computer Science' || student.course === 'Mechanical Engineering' ? 'Engineering' : 
-        student.course === 'Business Administration' ? 'Business' : 'Arts & Sciences'
+        student.course === 'Computer Science' || student.course === 'Mechanical Engineering' ? 'Engineering' :
+          student.course === 'Business Administration' ? 'Business' : 'Arts & Sciences'
       ),
       guardianName: student.guardianName || 'N/A',
       guardianPhone: student.guardianPhone || 'N/A',
       address: student.address || 'N/A',
       status: 'Active'
     };
-    
+
     console.log('Mapped student details:', studentDetails); // Debug log
     setSelectedStudent(studentDetails);
     setIsModalOpen(true);
@@ -1534,8 +1579,8 @@ const StudentCredentialsView = () => {
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger-color)' }}>
             <AlertCircle size={24} style={{ marginBottom: '1rem' }} />
             <p>{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="btn-primary"
               style={{ marginTop: '1rem' }}
             >
@@ -1549,11 +1594,11 @@ const StudentCredentialsView = () => {
 
   return (
     <>
-      <SectionHeader 
-        title="Student Credentials" 
-        subtitle={`Viewing ${students.length} student${students.length !== 1 ? 's' : ''}`} 
+      <SectionHeader
+        title="Student Credentials"
+        subtitle={`Viewing ${students.length} student${students.length !== 1 ? 's' : ''}`}
       />
-      
+
       <div className="card">
         <div className="table-responsive">
           <table className="data-table">
@@ -1577,11 +1622,11 @@ const StudentCredentialsView = () => {
                     <td>{student.year}</td>
                     <td>{student.course}</td>
                     <td className="text-right">
-                      <button 
+                      <button
                         onClick={() => handleShowMore(student)}
                         className="btn-outline"
-                        style={{ 
-                          fontSize: '0.75rem', 
+                        style={{
+                          fontSize: '0.75rem',
                           padding: '0.25rem 0.75rem',
                           display: 'flex',
                           alignItems: 'center',
@@ -1622,7 +1667,7 @@ const StudentCredentialsView = () => {
 const IssuesView = () => (
   <div>
     <SectionHeader title="Issues & Complaints" subtitle="Track and resolve student complaints" />
-    
+
     <div>
       {MOCK_ISSUES.map((issue) => (
         <div key={issue.id} className="issue-card">
@@ -1641,7 +1686,7 @@ const IssuesView = () => (
               </div>
             </div>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {issue.status !== 'Resolved' && (
               <button className="btn-success">
@@ -1686,7 +1731,7 @@ const ChatView = () => (
         <h3 style={{ fontWeight: 600 }}>John Doe (Room A-101)</h3>
         <button className="action-btn" style={{ color: 'var(--text-secondary)' }}><AlertCircle /></button>
       </div>
-      
+
       <div className="chat-messages">
         {MOCK_CHATS.map((msg) => (
           <div key={msg.id} className={`message ${msg.isMe ? 'sent' : 'received'}`}>
@@ -1699,9 +1744,9 @@ const ChatView = () => (
       </div>
 
       <div className="chat-input-area">
-        <input 
-          type="text" 
-          placeholder="Type a message..." 
+        <input
+          type="text"
+          placeholder="Type a message..."
           className="form-input"
           style={{ flex: 1 }}
         />
@@ -1752,7 +1797,7 @@ const MessMenuView = () => (
 const MessReviewsView = () => (
   <div>
     <SectionHeader title="Food Reviews & Ratings" subtitle="Feedback analytics from students" />
-    
+
     <div className="grid-2">
       {/* Graph Card */}
       <div className="card card-padding">
@@ -1833,7 +1878,7 @@ const MessFeesView = () => (
 const MessAttendanceView = () => (
   <div>
     <SectionHeader title="Student Attendance (Mess)" subtitle="Daily meal attendance tracking" />
-    
+
     <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
       <div className="summary-card">
         <h2 className="summary-count text-success">350</h2>
@@ -1932,9 +1977,9 @@ const AdminDashboard = () => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'room-allotment', label: 'Room Allotment', icon: BedDouble },
-    { 
-      id: 'mess-management', 
-      label: 'Mess Management', 
+    {
+      id: 'mess-management',
+      label: 'Mess Management',
       icon: Utensils,
       subItems: [
         { id: 'mess-menu', label: 'Mess Menu Update' },
@@ -1970,8 +2015,8 @@ const AdminDashboard = () => {
       <style>{cssStyles}</style>
       <div className="app-container">
         {isSidebarOpen && (
-          <div 
-            className="mobile-overlay" 
+          <div
+            className="mobile-overlay"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -2009,7 +2054,7 @@ const AdminDashboard = () => {
                       <ChevronDown className={`nav-arrow ${isExpanded ? 'rotate' : ''}`} />
                     )}
                   </button>
-                  
+
                   {hasSubItems && (
                     <div className={`submenu ${isExpanded ? 'open' : ''}`}>
                       {item.subItems.map(sub => (
@@ -2055,8 +2100,8 @@ const AdminDashboard = () => {
                       const name = adminProfile?.name || 'Admin';
                       const parts = name.split(' ').filter(Boolean);
                       const initials = (parts.length === 1
-                        ? parts[0].slice(0,2)
-                        : (parts[0][0] + (parts[1] ? parts[1][0] : '') )).toUpperCase();
+                        ? parts[0].slice(0, 2)
+                        : (parts[0][0] + (parts[1] ? parts[1][0] : ''))).toUpperCase();
                       return initials;
                     })()}
                   </div>
@@ -2067,7 +2112,7 @@ const AdminDashboard = () => {
                     <div style={{ paddingBottom: 8 }} className="profile-row">
                       <div className="user-avatar" style={{ width: 48, height: 48, fontSize: '1rem' }}>
                         {adminProfile ? (
-                          (adminProfile.name || 'A').split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase()
+                          (adminProfile.name || 'A').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
                         ) : 'AD'}
                       </div>
                       <div>

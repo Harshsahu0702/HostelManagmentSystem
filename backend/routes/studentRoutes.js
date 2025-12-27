@@ -1,14 +1,15 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const studentController = require('../controllers/studentController');
+const studentController = require("../controllers/studentController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Register a new student
-router.post('/register', studentController.registerStudent);
+// Register a new student (PUBLIC – no JWT)
+router.post("/register", studentController.registerStudent);
 
-// Get all students (for admin)
-router.get('/', studentController.getAllStudents);
+// Get all students (PROTECTED – admin/student with JWT)
+router.get("/", authMiddleware, studentController.getAllStudents);
 
-// Get single student by id
-router.get('/:id', studentController.getStudentById);
+// Get single student by id (PROTECTED – JWT required)
+router.get("/:id", authMiddleware, studentController.getStudentById);
 
 module.exports = router;

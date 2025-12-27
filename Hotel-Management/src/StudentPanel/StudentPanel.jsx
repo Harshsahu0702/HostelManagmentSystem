@@ -17,7 +17,6 @@ import Feedback from "./pages/Feedback";
 
 import "./styles/global.css";
 
-//h
 export default function StudentPanel() {
   const [activePage, setActivePage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
