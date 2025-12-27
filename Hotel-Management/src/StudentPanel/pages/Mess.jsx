@@ -11,11 +11,13 @@ const Mess = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!student) return;
+
     const load = async () => {
       setMenuLoading(true);
       setError(null);
       try {
-        const res = await getMessMenu(student?.hostelId || '');
+        const res = await getMessMenu(); // ✅ no hostelId
         setMenu(res.data?.items || []);
       } catch (err) {
         setMenu([]);
@@ -24,6 +26,7 @@ const Mess = () => {
         setMenuLoading(false);
       }
     };
+
     load();
   }, [student]);
 
@@ -31,6 +34,9 @@ const Mess = () => {
     <div>
       <div className="card">
         <h4 style={{ marginTop: 0 }}>Weekly Menu</h4>
+
+        {error && <div className="card">{error}</div>}
+
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -54,14 +60,20 @@ const Mess = () => {
                 </tr>
               )}
 
-              {!menuLoading && (menu || []).map((m) => (
-                <tr key={m.day} style={{ background: m.day === today ? '#eff6ff' : 'transparent' }}>
-                  <td style={{ fontWeight: 700 }}>{m.day}</td>
-                  <td>{m.breakfast || 'Not Found'}</td>
-                  <td>{m.lunch || 'Not Found'}</td>
-                  <td>{m.dinner || 'Not Found'}</td>
-                </tr>
-              ))}
+              {!menuLoading &&
+                (menu || []).map((m) => (
+                  <tr
+                    key={m.day}
+                    style={{
+                      background: m.day === today ? '#eff6ff' : 'transparent',
+                    }}
+                  >
+                    <td style={{ fontWeight: 700 }}>{m.day}</td>
+                    <td>{m.breakfast || 'Not Found'}</td>
+                    <td>{m.lunch || 'Not Found'}</td>
+                    <td>{m.dinner || 'Not Found'}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -71,4 +83,3 @@ const Mess = () => {
 };
 
 export default Mess;
-

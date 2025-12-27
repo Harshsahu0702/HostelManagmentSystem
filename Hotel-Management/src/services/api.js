@@ -132,13 +132,14 @@ export const getAllRooms = async () => {
 };
 
 export const getAvailableRooms = async (type) => {
-  const url = `${API_BASE_URL}/admin/available-rooms${type ? `?type=${encodeURIComponent(type)}` : ""}`;
-  const res = await axios.get(url);
+  const res = await api.get(
+    `/admin/available-rooms${type ? `?type=${encodeURIComponent(type)}` : ""}`
+  );
   return res.data;
 };
 
 export const autoAllot = async () => {
-  const res = await axios.post(`${API_BASE_URL}/admin/auto-allot`);
+  const res = await api.post("/admin/auto-allot");
   return res.data;
 };
 
