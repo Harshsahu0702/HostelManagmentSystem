@@ -1044,7 +1044,7 @@ const CreateAdminView = () => {
       <div className="card card-padding">
         <form onSubmit={handleSubmit}>
           <div className="grid-2">
-            <div className="form-group">
+            {/* <div className="form-group">
               <label className="form-label">Hostel ID *</label>
               <input
                 className="form-input"
@@ -1053,7 +1053,7 @@ const CreateAdminView = () => {
                 onChange={handleChange}
                 required
               />
-            </div>
+            </div> */}
 
             <div className="form-group">
               <label className="form-label">Admin Name *</label>
