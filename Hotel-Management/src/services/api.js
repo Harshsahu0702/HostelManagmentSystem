@@ -147,3 +147,8 @@ export const manualAllot = async (studentId, roomNumber) => {
   const res = await api.post("/admin/manual-allot", { studentId, roomNumber });
   return res.data;
 };
+
+export const removeAllotment = async (studentId) => {
+  const res = await api.post("/admin/remove-allotment", { studentId });
+  return res.data;
+};

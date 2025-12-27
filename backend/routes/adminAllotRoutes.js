@@ -10,6 +10,7 @@ router.get("/available-rooms", authMiddleware, adminAllotController.getAvailable
 // 🎯 Room allotment
 router.post("/auto-allot", authMiddleware, adminAllotController.autoAllot);
 router.post("/manual-allot", authMiddleware, adminAllotController.manualAllot);
+router.post("/remove-allotment", authMiddleware, adminAllotController.removeAllotment);
 // router.post("/auto-allot-by-type", authMiddleware, adminAllotController.autoAllotByType);
 
 // 👨‍🎓 Students list for allotment (hostel + optional room type)

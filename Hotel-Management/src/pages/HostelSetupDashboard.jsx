@@ -212,98 +212,92 @@ const HostelSetupDashboard = () => {
         return true;
     }
   };
-//navigation handelers
 
-const nextStep = async () => {
-  if (!validateStep(activeStep)) {
-    setValidationError("Please fill in all required fields before proceeding.");
-    return;
-  }
-
-  try {
-    // ✅ STEP 1: Save Basic Info & CREATE HOSTEL
-    if (activeStep === 1) {
-      const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
-
-      const res = await axios.post(
-        "http://localhost:5000/api/hostel-setup/save-draft",
-        {
-          step: 1,
-          data: draftData,
-        }
-      );
-
-      // 🔴 MOST IMPORTANT LINE (THIS WAS MISSING)
-      setHostelId(res.data.hostelId);
-      localStorage.setItem("hostelId", res.data.hostelId);
-
-      setActiveStep(2);
+  const nextStep = async () => {
+    if (!validateStep(activeStep)) {
+      setValidationError("Please fill in all required fields before proceeding.");
       return;
     }
 
-    // ✅ STEP 2: Create Admin (NO save-draft here)
-    if (activeStep === 2) {
-      const storedHostelId = hostelId || localStorage.getItem("hostelId");
+    try {
+      // STEP 1: Save Basic Info & CREATE HOSTEL
+      if (activeStep === 1) {
+        const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
 
-      if (!storedHostelId) {
-        setValidationError("Hostel ID missing. Please save Basic Info first.");
+        const res = await axios.post(
+          "https://strivers-clone.onrender.com/api/hostel-setup/save-draft",
+          {
+            step: 1,
+            data: draftData,
+          }
+        );
+
+        // MOST IMPORTANT LINE (THIS WAS MISSING)
+        setHostelId(res.data.hostelId);
+        localStorage.setItem("hostelId", res.data.hostelId);
+
+        setActiveStep(2);
         return;
       }
 
+      // STEP 2: Create Admin (NO save-draft here)
+      if (activeStep === 2) {
+        const storedHostelId = hostelId || localStorage.getItem("hostelId");
+
+        if (!storedHostelId) {
+          setValidationError("Hostel ID missing. Please save Basic Info first.");
+          return;
+        }
+
+        await axios.post(
+          "https://strivers-clone.onrender.com/api/admins/create-super-admin",
+          {
+            name: formData.adminName,
+            email: formData.adminEmail,
+            password: formData.adminPassword,
+            hostelId: storedHostelId,
+          }
+        );
+
+        setActiveStep(3);
+        return;
+      }
+
+      // STEPS 3, 4, 5 → save-draft with hostelId
+      const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
+
       await axios.post(
-        "http://localhost:5000/api/admins/create-super-admin",
+        "https://strivers-clone.onrender.com/api/hostel-setup/save-draft",
         {
-          name: formData.adminName,
-          email: formData.adminEmail,
-          password: formData.adminPassword,
-          hostelId: storedHostelId,
+          step: activeStep,
+          data: draftData,
+          hostelId: hostelId || localStorage.getItem("hostelId"),
         }
       );
 
-      setActiveStep(3);
-      return;
-    }
-
-    // ✅ STEPS 3, 4, 5 → save-draft with hostelId
-    const { adminName, adminEmail, adminPassword, adminConfirmPassword, ...draftData } = formData;
-
-    await axios.post(
-      "http://localhost:5000/api/hostel-setup/save-draft",
-      {
-        step: activeStep,
-        data: draftData,
-        hostelId: hostelId || localStorage.getItem("hostelId"),
+      if (activeStep < totalSteps) {
+        setActiveStep(prev => prev + 1);
       }
-    );
-
-    if (activeStep < totalSteps) {
-      setActiveStep(prev => prev + 1);
+    } catch (err) {
+      console.error("Operation failed", err);
+      setValidationError(err.response?.data?.message || "An error occurred.");
     }
-  } catch (err) {
-    console.error("Operation failed", err);
-    setValidationError(err.response?.data?.message || "An error occurred.");
-  }
-};
-
-  const prevStep = () => {
-    setValidationError(''); // Clear error on navigation
-    if (activeStep > 1) setActiveStep(prev => prev - 1);
   };
 
-const completeSetup = async () => {
-  try {
-    const res = await axios.post(
-      "http://localhost:5000/api/hostel-setup/complete",
-      { hostelId }
-    );
+  const completeSetup = async () => {
+    try {
+      const res = await axios.post(
+        "https://strivers-clone.onrender.com/api/hostel-setup/complete",
+        { hostelId }
+      );
 
-    console.log("Server Response:", res.data);
-    setIsCompleted(true);
-  } catch (error) {
-    console.error("Setup failed:", error);
-    alert("Failed to save hostel setup");
-  }
-};
+      console.log("Server Response:", res.data);
+      setIsCompleted(true);
+    } catch (error) {
+      console.error("Setup failed:", error);
+      alert("Failed to save hostel setup");
+    }
+  };
 
   // --- Render Steps ---
   const renderStepContent = () => {

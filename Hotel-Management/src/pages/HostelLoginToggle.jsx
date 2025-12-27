@@ -30,7 +30,7 @@ export default function HostelLoginToggle() {
         };
 
         const res = await axios.post(
-  "http://localhost:5000/api/auth/student/login",
+  "https://strivers-clone.onrender.com/api/auth/student/login",
   studentCreds
 );
 
@@ -58,7 +58,7 @@ if (res?.data?.data) {
         };
 
         const res = await axios.post(
-  "http://localhost:5000/api/auth/admin/login",
+  "https://strivers-clone.onrender.com/api/auth/admin/login",
   adminCreds
 );
 

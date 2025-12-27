@@ -27,7 +27,7 @@ import {
   DollarSign,
   ClipboardCheck
 } from 'lucide-react';
-import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot } from '../services/api';
+import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment } from '../services/api';
 
 // --- CSS Styles (Embedded for Single-File Compilation) ---
 const cssStyles = `
@@ -66,13 +66,13 @@ const cssStyles = `
 /* --- Layout Structure --- */
 .app-container {
   display: flex;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 117vw;
 }
 
 /* Sidebar */
 .sidebar {
-  width: var(--sidebar-width);
+  width: 300px;
   min-width: var(--sidebar-width);
   background-color: var(--white);
   border-right: 1px solid var(--border-color);
@@ -272,6 +272,7 @@ const cssStyles = `
   align-items: center;
   gap: 1.5rem;
   margin-left: auto; /* Pushes content to the right if toggle is missing */
+  flex-shrink: 0;
 }
 
 .notification-btn {
@@ -300,6 +301,7 @@ const cssStyles = `
   gap: 0.75rem;
   padding-left: 1.5rem;
   border-left: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -353,8 +355,9 @@ const cssStyles = `
 .content-area {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem;
+  padding: 1.5rem 2rem 2rem 2rem;
 }
+
 
 .content-container {
   max-width: 1280px;
@@ -642,7 +645,7 @@ const Badge = ({ type }) => (
 );
 // --- Views ---
 
-const DashboardView = ({ setActiveTab }) => {
+const DashboardView = ({ setActiveTab, adminProfile, dropdownOpen, setDropdownOpen, profileWrapperRef, getCreatedAtFromId }) => {
   const [stats, setStats] = useState([
     { title: 'Total Students', value: '0', colorClass: 'text-blue bg-blue-light', icon: Users },
     { title: 'Rooms Occupied', value: '0 / 0', colorClass: 'text-green bg-green-light', icon: BedDouble },
@@ -659,7 +662,7 @@ const DashboardView = ({ setActiveTab }) => {
         const [roomStats, studentsRes, issuesRes] = await Promise.all([
           getRoomStats().catch(() => ({ occupiedRooms: 0, totalRooms: 0 })),
           getAllStudents().catch(() => ({ success: false, data: [] })),
-          // axios.get('http://localhost:5000/api/issues').catch(() => ({ data: [] }))
+          // axios.get('https://strivers-clone.onrender.com/api/issues').catch(() => ({ data: [] }))
         ]);
 
         const students = studentsRes.success ? studentsRes.data : [];
@@ -701,48 +704,121 @@ const DashboardView = ({ setActiveTab }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <SectionHeader title="Dashboard" subtitle="Overview of hostel activities" />
-        <button
-          onClick={() => setActiveTab('registration')}
-          style={{
-            background: 'linear-gradient(45deg, #4f46e5, #7c3aed)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            fontWeight: 600,
-            fontSize: '1rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)',
-            transition: 'all 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)';
-          }}
-        >
-          <UserPlus size={20} />
-          <span>Register New Student</span>
-          <span style={{
-            position: 'absolute',
-            background: 'rgba(255, 255, 255, 0.2)',
-            width: '100px',
-            height: '100%',
-            left: '-120%',
-            top: 0,
-            transform: 'skewX(-15deg)',
-            transition: '0.5s',
-            pointerEvents: 'none'
-          }} className="shine"></span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            onClick={() => setActiveTab('registration')}
+            style={{
+              background: 'linear-gradient(45deg, #4f46e5, #7c3aed)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontWeight: 600,
+              fontSize: '1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)';
+            }}
+          >
+            <UserPlus size={20} />
+            <span>Register New Student</span>
+            <span style={{
+              position: 'absolute',
+              background: 'rgba(255, 255, 255, 0.2)',
+              width: '100px',
+              height: '100%',
+              left: '-120%',
+              top: 0,
+              transform: 'skewX(-15deg)',
+              transition: '0.5s',
+              pointerEvents: 'none'
+            }} className="shine"></span>
+          </button>
+
+          <div
+            style={{ position: 'relative' }}
+            ref={profileWrapperRef}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <div
+              className="user-profile"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(prev => !prev);
+              }}
+            >
+              <div className="user-info">
+                <p className="user-name">{adminProfile?.name || 'Admin User'}</p>
+                <p className="user-role">{adminProfile?.role || 'Super Admin'}</p>
+              </div>
+              <div className="user-avatar">
+                {(() => {
+                  const name = adminProfile?.name || 'Admin';
+                  const parts = name.split(' ').filter(Boolean);
+                  const initials = (parts.length === 1
+                    ? parts[0].slice(0, 2)
+                    : (parts[0][0] + (parts[1] ? parts[1][0] : ''))).toUpperCase();
+                  return initials;
+                })()}
+              </div>
+            </div>
+
+            {dropdownOpen && (
+              <div
+                className="profile-dropdown"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <div style={{ paddingBottom: 8 }} className="profile-row">
+                  <div className="user-avatar" style={{ width: 48, height: 48, fontSize: '1rem' }}>
+                    {adminProfile ? (
+                      (adminProfile.name || 'A').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+                    ) : 'AD'}
+                  </div>
+                  <div>
+                    <div className="profile-value">{adminProfile?.name || 'Admin User'}</div>
+                    <div className="profile-label">{adminProfile?.email || ''}</div>
+                  </div>
+                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <div>
+                    <div className="profile-label">Role</div>
+                    <div className="profile-value">{adminProfile?.role || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="profile-label">Phone</div>
+                    <div className="profile-value">{adminProfile?.phone || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="profile-label">Hostel / Dept</div>
+                    <div className="profile-value">{adminProfile?.hostelId?.hostelName || adminProfile?.hostelId || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="profile-label">Account Created</div>
+                    <div className="profile-value">{adminProfile?.createdAt || (getCreatedAtFromId ? getCreatedAtFromId(adminProfile?._id) : 'N/A')}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <div className="grid-4" style={{ marginBottom: '2rem' }}>
         {stats.map((stat, idx) => (
@@ -814,6 +890,7 @@ const RoomAllotmentView = () => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [selectedRoomNumber, setSelectedRoomNumber] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -844,6 +921,28 @@ const RoomAllotmentView = () => {
     } catch (err) {
       console.error(err);
       alert(err.message || 'Manual allot failed');
+    }
+  };
+
+  const handleRemoveAllotment = async (studentId) => {
+    if (!studentId) return;
+    const ok = window.confirm('Remove room allotment for this student?');
+    if (!ok) return;
+
+    setDeleteLoading(true);
+    try {
+      await removeAllotment(studentId);
+      alert('Allotment removed successfully');
+      const r = await getAllStudents();
+      if (r.success) setStudents(r.data);
+      setEditingStudent(null);
+      setAvailableRooms([]);
+      setSelectedRoomNumber('');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Remove allotment failed');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -903,7 +1002,7 @@ const RoomAllotmentView = () => {
                   <td className="font-mono" style={{ color: 'var(--text-secondary)' }}>{item.roomAllocated || '-'}</td>
                   <td><Badge type={(item.allotmentStatus || (item.roomAllocated ? 'ALLOTTED' : 'PENDING')) === 'ALLOTTED' ? 'Allotted' : 'Pending'} /></td>
                   <td className="text-right">
-                    <button className="action-btn" disabled={(item.allotmentStatus || (item.roomAllocated ? 'ALLOTTED' : 'PENDING')) === 'ALLOTTED'} onClick={async () => {
+                    <button className="action-btn" onClick={async () => {
                       setEditingStudent(item);
                       try {
                         const avail = await getAvailableRooms(item.preferredRoomType);
@@ -949,9 +1048,24 @@ const RoomAllotmentView = () => {
                 ))}
               </select>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-              <button className="btn-outline" onClick={() => { setEditingStudent(null); setAvailableRooms([]); setSelectedRoomNumber(''); }}>Cancel</button>
-              <button className="btn-primary" onClick={() => handleManualSave(editingStudent._id || editingStudent.id, selectedRoomNumber)} disabled={!selectedRoomNumber}>Save</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 12 }}>
+              <button
+                className="btn-outline"
+                onClick={() => handleRemoveAllotment(editingStudent._id || editingStudent.id)}
+                style={{
+                  borderColor: '#fecaca',
+                  color: '#b91c1c',
+                  backgroundColor: '#fef2f2'
+                }}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete Allotment'}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button className="btn-outline" onClick={() => { setEditingStudent(null); setAvailableRooms([]); setSelectedRoomNumber(''); }}>Cancel</button>
+                <button className="btn-primary" onClick={() => handleManualSave(editingStudent._id || editingStudent.id, selectedRoomNumber)} disabled={!selectedRoomNumber}>Save</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1989,7 +2103,17 @@ const AdminDashboard = () => {
   ];
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <DashboardView setActiveTab={setActiveTab} />;
+      case 'dashboard':
+        return (
+          <DashboardView
+            setActiveTab={setActiveTab}
+            adminProfile={adminProfile}
+            dropdownOpen={dropdownOpen}
+            setDropdownOpen={setDropdownOpen}
+            profileWrapperRef={profileWrapperRef}
+            getCreatedAtFromId={getCreatedAtFromId}
+          />
+        );
       case 'room-allotment': return <RoomAllotmentView />;
       case 'registration': return <StudentRegistrationView />;
       case 'credentials': return <StudentCredentialsView />;
@@ -2000,7 +2124,17 @@ const AdminDashboard = () => {
       case 'mess-fees': return <MessFeesView />;
       case 'mess-attendance': return <MessAttendanceView />;
       case 'create-admin': return <CreateAdminView />;
-      default: return <DashboardView setActiveTab={setActiveTab} />;
+      default:
+        return (
+          <DashboardView
+            setActiveTab={setActiveTab}
+            adminProfile={adminProfile}
+            dropdownOpen={dropdownOpen}
+            setDropdownOpen={setDropdownOpen}
+            profileWrapperRef={profileWrapperRef}
+            getCreatedAtFromId={getCreatedAtFromId}
+          />
+        );
     }
   };
   return (
@@ -2076,67 +2210,6 @@ const AdminDashboard = () => {
           </div>
         </aside>
         <div className="main-wrapper">
-          <header className="top-bar">
-            <div className="header-right">
-              <button className="notification-btn">
-                <Bell />
-                <span className="badge-dot"></span>
-              </button>
-              <div style={{ position: 'relative' }} ref={profileWrapperRef}>
-                <div className="user-profile" onClick={() => setDropdownOpen(prev => !prev)}>
-                  <div className="user-info">
-                    <p className="user-name">{adminProfile?.name || 'Admin User'}</p>
-                    <p className="user-role">{adminProfile?.role || 'Super Admin'}</p>
-                  </div>
-                  <div className="user-avatar">
-                    {(() => {
-                      const name = adminProfile?.name || 'Admin';
-                      const parts = name.split(' ').filter(Boolean);
-                      const initials = (parts.length === 1
-                        ? parts[0].slice(0, 2)
-                        : (parts[0][0] + (parts[1] ? parts[1][0] : ''))).toUpperCase();
-                      return initials;
-                    })()}
-                  </div>
-                </div>
-
-                {dropdownOpen && (
-                  <div className="profile-dropdown">
-                    <div style={{ paddingBottom: 8 }} className="profile-row">
-                      <div className="user-avatar" style={{ width: 48, height: 48, fontSize: '1rem' }}>
-                        {adminProfile ? (
-                          (adminProfile.name || 'A').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-                        ) : 'AD'}
-                      </div>
-                      <div>
-                        <div className="profile-value">{adminProfile?.name || 'Admin User'}</div>
-                        <div className="profile-label">{adminProfile?.email || ''}</div>
-                      </div>
-                    </div>
-                    <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
-                    <div style={{ display: 'grid', gap: 6 }}>
-                      <div>
-                        <div className="profile-label">Role</div>
-                        <div className="profile-value">{adminProfile?.role || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <div className="profile-label">Phone</div>
-                        <div className="profile-value">{adminProfile?.phone || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <div className="profile-label">Hostel / Dept</div>
-                        <div className="profile-value">{adminProfile?.hostelId?.hostelName || adminProfile?.hostelId || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <div className="profile-label">Account Created</div>
-                        <div className="profile-value">{adminProfile?.createdAt || getCreatedAtFromId(adminProfile?._id)}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </header>
           <main className="content-area">
             <div className="content-container">
               {renderContent()}

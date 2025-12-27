@@ -10,6 +10,18 @@ const toObjectId = (value) => {
   }
 };
 
+const getRoomIndexById = (setup, roomId) => {
+  if (!setup?.generatedRooms || !roomId) return -1;
+  const rid = toObjectId(roomId);
+  if (!rid) return -1;
+  return setup.generatedRooms.findIndex((r) => r?._id && r._id.equals(rid));
+};
+
+const getRoomIndexByNumber = (setup, roomNumber) => {
+  if (!setup?.generatedRooms || !roomNumber) return -1;
+  return setup.generatedRooms.findIndex((r) => r?.roomNumber === roomNumber);
+};
+
 // ================= GET ALL ROOMS =================
 exports.getAllRooms = async (req, res) => {
   try {
@@ -208,11 +220,15 @@ exports.manualAllot = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    if (student.allotmentStatus === "ALLOTTED" || student.roomId) {
-      await session.abortTransaction();
-      return res
-        .status(400)
-        .json({ success: false, message: "Student is already allotted" });
+    // If student already has a room, release it first (supports re-assignment)
+    if (student.roomId) {
+      const prevIdx = getRoomIndexById(setup, student.roomId);
+      if (prevIdx >= 0) {
+        const prevRoom = setup.generatedRooms[prevIdx];
+        const prevOcc = Math.max(0, Number(prevRoom.occupiedCount || 0) - 1);
+        prevRoom.occupiedCount = prevOcc;
+        prevRoom.occupied = prevOcc >= Number(prevRoom.capacity || 1);
+      }
     }
 
     if (!student.preferredRoomType) {
@@ -223,12 +239,11 @@ exports.manualAllot = async (req, res) => {
     }
 
     const roomObjectId = roomId ? toObjectId(roomId) : null;
+    const targetIdx = roomNumber
+      ? getRoomIndexByNumber(setup, roomNumber)
+      : (roomObjectId ? setup.generatedRooms.findIndex((r) => r?._id && r._id.equals(roomObjectId)) : -1);
 
-    const room = setup.generatedRooms.find((r) => {
-      if (roomNumber && r.roomNumber === roomNumber) return true;
-      if (roomObjectId && r._id && r._id.equals(roomObjectId)) return true;
-      return false;
-    });
+    const room = targetIdx >= 0 ? setup.generatedRooms[targetIdx] : null;
 
     if (!room) {
       await session.abortTransaction();
@@ -282,6 +297,68 @@ exports.manualAllot = async (req, res) => {
     res.json({ success: true, message: "Room allotted successfully" });
   } catch (err) {
     console.error("manualAllot error", err);
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// ================= REMOVE ALLOTMENT =================
+exports.removeAllotment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { studentId } = req.body;
+
+    if (!studentId) {
+      await session.abortTransaction();
+      return res.status(400).json({ success: false, message: "studentId is required" });
+    }
+
+    const setup = await HostelSetup.findOne({
+      _id: req.user.hostelId,
+      status: "COMPLETED",
+    }).session(session);
+
+    if (!setup) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: "Hostel setup not found" });
+    }
+
+    const student = await StudentRegistration.findOne({
+      _id: studentId,
+      hostelId: req.user.hostelId,
+    }).session(session);
+
+    if (!student) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    if (student.roomId) {
+      const prevIdx = getRoomIndexById(setup, student.roomId);
+      if (prevIdx >= 0) {
+        const prevRoom = setup.generatedRooms[prevIdx];
+        const prevOcc = Math.max(0, Number(prevRoom.occupiedCount || 0) - 1);
+        prevRoom.occupiedCount = prevOcc;
+        prevRoom.occupied = prevOcc >= Number(prevRoom.capacity || 1);
+      }
+    }
+
+    student.roomId = null;
+    student.roomAllocated = null;
+    student.allotmentStatus = "PENDING";
+
+    await student.save({ session });
+    await setup.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json({ success: true, message: "Allotment removed successfully" });
+  } catch (err) {
+    console.error("removeAllotment error", err);
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ success: false, message: "Internal server error" });
