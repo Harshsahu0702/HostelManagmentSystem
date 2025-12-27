@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const AntiRaggingSchema = new mongoose.Schema({
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'HostelSetup', required: true },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'StudentRegistration' },
   reporterName: String,
   reporterContact: String,

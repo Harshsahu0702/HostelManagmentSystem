@@ -15,7 +15,7 @@ const Complaints = () => {
     setError(null);
     try {
       const res = await getComplaints(); // ✅ no studentId
-      setComplaints(res.data || []);
+      setComplaints(res?.data || []);
     } catch (err) {
       setError('Failed to load complaints');
     } finally {

@@ -6,13 +6,14 @@ const DepartureRequest = require("../models/DepartureRequest");
 const FeeRecord = require("../models/FeeRecord");
 const ChatMessage = require("../models/ChatMessage");
 const Feedback = require("../models/Feedback");
+const StudentRegistration = require("../models/StudentRegistration");
 
 // 🔔 Notifications
 exports.getNotificationsForStudent = async (req, res) => {
   try {
     const notes = await Notification.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: notes });
@@ -24,10 +25,15 @@ exports.getNotificationsForStudent = async (req, res) => {
 // 📢 Complaints
 exports.createComplaint = async (req, res) => {
   try {
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    if (!student?.hostelId) {
+      return res.status(400).json({ success: false, message: "Student hostelId not found" });
+    }
+
     const payload = {
       ...req.body,
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      hostelId: student.hostelId,
     };
 
     const comp = new Complaint(payload);
@@ -43,7 +49,7 @@ exports.getComplaintsForStudent = async (req, res) => {
   try {
     const list = await Complaint.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: list });
@@ -55,10 +61,15 @@ exports.getComplaintsForStudent = async (req, res) => {
 // 🛑 Anti-ragging
 exports.createAntiRagging = async (req, res) => {
   try {
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    if (!student?.hostelId) {
+      return res.status(400).json({ success: false, message: "Student hostelId not found" });
+    }
+
     const payload = {
       ...req.body,
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      hostelId: student.hostelId,
     };
 
     const r = new AntiRagging(payload);
@@ -74,7 +85,7 @@ exports.getAntiRaggingForStudent = async (req, res) => {
   try {
     const list = await AntiRagging.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: list });
@@ -103,10 +114,15 @@ exports.getMessMenu = async (req, res) => {
 // ✈️ Departure
 exports.createDeparture = async (req, res) => {
   try {
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    if (!student?.hostelId) {
+      return res.status(400).json({ success: false, message: "Student hostelId not found" });
+    }
+
     const payload = {
       ...req.body,
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      hostelId: student.hostelId,
     };
 
     const d = new DepartureRequest(payload);
@@ -122,7 +138,7 @@ exports.getDeparturesForStudent = async (req, res) => {
   try {
     const list = await DepartureRequest.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: list });
@@ -136,7 +152,7 @@ exports.getFeesForStudent = async (req, res) => {
   try {
     const list = await FeeRecord.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: list });
@@ -148,10 +164,15 @@ exports.getFeesForStudent = async (req, res) => {
 // 💬 Chat
 exports.postChatMessage = async (req, res) => {
   try {
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    if (!student?.hostelId) {
+      return res.status(400).json({ success: false, message: "Student hostelId not found" });
+    }
+
     const payload = {
       ...req.body,
       fromStudent: req.user.id,
-      hostelId: req.user.hostelId,
+      hostelId: student.hostelId,
     };
 
     if (!payload.text) {
@@ -170,10 +191,9 @@ exports.postChatMessage = async (req, res) => {
 exports.getChatForStudent = async (req, res) => {
   try {
     const list = await ChatMessage.find({
-      hostelId: req.user.hostelId,
-      $or: [
-        { fromStudent: req.user.id },
-        { to: req.user.id },
+      $and: [
+        { $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }] },
+        { $or: [{ fromStudent: req.user.id }, { to: req.user.id }] },
       ],
     }).sort({ createdAt: 1 });
 
@@ -186,10 +206,15 @@ exports.getChatForStudent = async (req, res) => {
 // ⭐ Feedback
 exports.postFeedback = async (req, res) => {
   try {
+    const student = await StudentRegistration.findById(req.user.id).select("hostelId");
+    if (!student?.hostelId) {
+      return res.status(400).json({ success: false, message: "Student hostelId not found" });
+    }
+
     const payload = {
       ...req.body,
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      hostelId: student.hostelId,
     };
 
     const f = new Feedback(payload);
@@ -205,7 +230,7 @@ exports.getFeedbackForStudent = async (req, res) => {
   try {
     const list = await Feedback.find({
       studentId: req.user.id,
-      hostelId: req.user.hostelId,
+      $or: [{ hostelId: req.user.hostelId }, { hostelId: { $exists: false } }],
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, data: list });

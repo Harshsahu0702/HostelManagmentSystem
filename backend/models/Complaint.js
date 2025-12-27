@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const ComplaintSchema = new mongoose.Schema({
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'HostelSetup', required: true },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'StudentRegistration', required: true },
   subject: String,
   description: String,
