@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import StudentDetailsModal from "./StudentDetailsModal";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 import { getRoomStats, registerStudent, getAllStudents, createAdmin, getAdminByEmail, getAvailableRooms, autoAllot, manualAllot, removeAllotment, sendPersonalMessage, getPersonalMessages } from '../services/api';
 import IssuesComplaints from './issues&complaints';
+import socket, {
+  joinUserRoom
+} from "../services/socket";
 
 // --- Mock Data Constants ---
 const MOCK_CHATS = [
@@ -1338,84 +1341,84 @@ const StudentRegistrationView = () => {
   };
 
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setSubmitStatus({ success: null, message: "" });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus({ success: null, message: "" });
 
-  try {
-    // ✅ GET TOKEN
-    const token = localStorage.getItem("token");
+    try {
+      // ✅ GET TOKEN
+      const token = localStorage.getItem("token");
 
-    if (!token) {
+      if (!token) {
+        setSubmitStatus({
+          success: false,
+          message: "Login expired. Please login again.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // ✅ DECODE TOKEN TO GET hostelId
+      const decoded = jwtDecode(token);
+      const hostelId = decoded?.hostelId;
+
+      if (!hostelId) {
+        setSubmitStatus({
+          success: false,
+          message: "Hostel ID missing. Please login again.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // ✅ DEBUG LOG (VERY IMPORTANT)
+      console.log("📤 Sending student data:", {
+        ...formData,
+        hostelId,
+      });
+
+      // ✅ API CALL
+      await registerStudent({
+        ...formData,
+        hostelId,
+      });
+
+      // ✅ SUCCESS
+      setSubmitStatus({
+        success: true,
+        message: "Student registered successfully!",
+      });
+
+      // ✅ RESET FORM
+      setFormData({
+        fullName: "",
+        rollNumber: "",
+        email: "",
+        phoneNumber: "",
+        address: "",
+        course: "Computer Science",
+        year: "1st Year",
+        guardianName: "",
+        relationship: "Father",
+        guardianEmail: "",
+        guardianPhone: "",
+        preferredRoomType: "Single (AC)",
+      });
+
+    } catch (error) {
+      console.error("Registration error:", error);
+
       setSubmitStatus({
         success: false,
-        message: "Login expired. Please login again.",
+        message:
+          error?.response?.data?.message ||
+          "Failed to register student. Please try again.",
       });
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // ✅ DECODE TOKEN TO GET hostelId
-    const decoded = jwtDecode(token);
-    const hostelId = decoded?.hostelId;
-
-    if (!hostelId) {
-      setSubmitStatus({
-        success: false,
-        message: "Hostel ID missing. Please login again.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // ✅ DEBUG LOG (VERY IMPORTANT)
-    console.log("📤 Sending student data:", {
-      ...formData,
-      hostelId,
-    });
-
-    // ✅ API CALL
-    await registerStudent({
-      ...formData,
-      hostelId,
-    });
-
-    // ✅ SUCCESS
-    setSubmitStatus({
-      success: true,
-      message: "Student registered successfully!",
-    });
-
-    // ✅ RESET FORM
-    setFormData({
-      fullName: "",
-      rollNumber: "",
-      email: "",
-      phoneNumber: "",
-      address: "",
-      course: "Computer Science",
-      year: "1st Year",
-      guardianName: "",
-      relationship: "Father",
-      guardianEmail: "",
-      guardianPhone: "",
-      preferredRoomType: "Single (AC)",
-    });
-
-  } catch (error) {
-    console.error("Registration error:", error);
-
-    setSubmitStatus({
-      success: false,
-      message:
-        error?.response?.data?.message ||
-        "Failed to register student. Please try again.",
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   return (
@@ -1820,13 +1823,19 @@ const StudentCredentialsView = () => {
   );
 };
 
-const ChatView = () => {
+const ChatView = ({ adminProfile }) => {
+  const selectedStudentRef = useRef(null);
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!adminProfile?._id) return;
+    joinUserRoom(adminProfile._id);
+  }, [adminProfile]);
 
   // Fetch students when component mounts
   useEffect(() => {
@@ -1852,10 +1861,38 @@ const ChatView = () => {
     fetchStudents();
   }, []);
 
+  useEffect(() => {
+    const handler = (message) => {
+      const currentStudent = selectedStudentRef.current;
+      if (!currentStudent) return;
+
+      setMessages(prev => {
+        // prevent duplicates
+        if (prev.find(m => m._id === message._id)) return prev;
+
+        // show only if message belongs to current chat
+        if (
+          String(message.senderId) === String(currentStudent._id) ||
+          String(message.receiverId) === String(currentStudent._id)
+        ) {
+          return [...prev, message];
+        }
+
+        return prev;
+      });
+    };
+
+    socket.on("personalMessage", handler);
+
+    return () => {
+      socket.off("personalMessage", handler);
+    };
+  }, []);
+
   // Fetch messages when a student is selected
   useEffect(() => {
     if (!selectedStudent) return;
-
+    selectedStudentRef.current = selectedStudent;
     const fetchMessages = async () => {
       try {
         const response = await getPersonalMessages(selectedStudent._id);
@@ -1876,25 +1913,19 @@ const ChatView = () => {
     if (!newMessage.trim() || !selectedStudent) return;
 
     try {
-      const response = await sendPersonalMessage(selectedStudent._id, newMessage);
-      if (response.success) {
-        // Add the new message to the messages list
-        const newMsg = {
-          _id: response.data._id,
-          text: newMessage,
-          to: selectedStudent._id,
-          fromStudent: null, // Admin message
-          createdAt: new Date()
-        };
-        setNewMessage('');
-        const refreshed = await getPersonalMessages(selectedStudent._id);
-        if (refreshed.success) setMessages(refreshed.data);
-        setNewMessage('');
-      } else {
-        console.error('Failed to send message:', response.message);
+      const text = newMessage;
+      setNewMessage("");
+
+      const res = await sendPersonalMessage(selectedStudent._id, text);
+      const created = res?.data;
+      if (created?._id) {
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === created._id)) return prev;
+          return [...prev, created];
+        });
       }
     } catch (err) {
-      console.error('Error sending message:', err);
+      console.error("Error sending message:", err);
     }
   };
 
@@ -1937,18 +1968,18 @@ const ChatView = () => {
       {/* Sidebar List */}
       <div className="chat-sidebar">
         <div className="chat-search">
-          <input 
-            type="text" 
-            placeholder="Search student..." 
-            className="form-input" 
-            style={{ backgroundColor: '#f9fafb' }} 
+          <input
+            type="text"
+            placeholder="Search student..."
+            className="form-input"
+            style={{ backgroundColor: '#f9fafb' }}
           />
         </div>
         <div className="chat-list">
           {students.length > 0 ? (
             students.map((student) => (
-              <div 
-                key={student._id} 
+              <div
+                key={student._id}
                 className={`chat-item ${selectedStudent?._id === student._id ? 'active' : ''}`}
                 onClick={() => setSelectedStudent(student)}
                 style={{ cursor: 'pointer' }}
@@ -2012,8 +2043,8 @@ const ChatView = () => {
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
-              <button 
-                className="btn-primary" 
+              <button
+                className="btn-primary"
                 style={{ width: 'auto' }}
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
@@ -2217,19 +2248,26 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!loggedInEmail) return;
+
     let mounted = true;
+
     const fetchProfile = async () => {
       try {
         const res = await getAdminByEmail(loggedInEmail);
+
         if (mounted && res && res.success) {
           setAdminProfile(res.data);
         }
       } catch (err) {
-        console.error('Failed to fetch admin profile', err);
+        console.error("Failed to fetch admin profile", err);
       }
     };
+
     fetchProfile();
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [loggedInEmail]);
 
   // close dropdown when clicking outside
@@ -2284,10 +2322,10 @@ const AdminDashboard = () => {
       case 'room-allotment': return <RoomAllotmentView />;
       case 'registration': return <StudentRegistrationView />;
       case 'credentials': return <StudentCredentialsView />;
-      case 'issues': 
+      case 'issues':
         console.log('AdminDashboard adminProfile for issues:', adminProfile);
-        return <IssuesComplaints hostelId={adminProfile?.hostelId} />; 
-      case 'chat': return <ChatView />;
+        return <IssuesComplaints hostelId={adminProfile?.hostelId} />;
+      case 'chat': return <ChatView adminProfile={adminProfile} />;
       case 'mess-menu': return <MessMenuView />;
       case 'mess-reviews': return <MessReviewsView />;
       case 'mess-fees': return <MessFeesView />;

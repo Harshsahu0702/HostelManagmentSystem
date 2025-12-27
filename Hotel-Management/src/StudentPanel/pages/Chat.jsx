@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Send } from "lucide-react";
 import { useStudent } from "../../contexts/StudentContext";
 import {
@@ -6,6 +6,9 @@ import {
   getPersonalMessages,
   sendPersonalMessage,
 } from "../../services/api";
+import socket, {
+  joinUserRoom,
+} from "../../services/socket";
 
 const Chat = () => {
   const { student } = useStudent() || {};
@@ -17,6 +20,38 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const selectedAdminRef = useRef(null);
+
+  /* ================= SOCKET SETUP ================= */
+  useEffect(() => {
+    if (!student?._id) return;
+
+    joinUserRoom(student._id);
+
+    const handleIncomingMessage = (message) => {
+      const currentAdmin = selectedAdminRef.current;
+      if (!currentAdmin) return;
+
+      // show only messages related to currently selected admin
+      if (
+        String(message.senderId) === String(currentAdmin._id) ||
+        String(message.receiverId) === String(currentAdmin._id)
+      ) {
+        setMessages((prev) => {
+          // prevent duplicate messages
+          if (prev.some((m) => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
+      }
+    };
+
+    socket.on("personalMessage", handleIncomingMessage);
+
+    return () => {
+      socket.off("personalMessage", handleIncomingMessage);
+    };
+  }, [student]);
+
   /* ================= LOAD ADMINS ================= */
   useEffect(() => {
     const loadAdmins = async () => {
@@ -24,11 +59,15 @@ const Chat = () => {
         const res = await getAdminsForChat();
         const list = res.data || [];
         setAdmins(list);
-        if (list.length > 0) setSelectedAdmin(list[0]);
+        if (list.length > 0) {
+          setSelectedAdmin(list[0]);
+          selectedAdminRef.current = list[0];
+        }
       } catch (err) {
         console.error("Failed to load admins", err);
       }
     };
+
     loadAdmins();
   }, []);
 
@@ -36,12 +75,15 @@ const Chat = () => {
   useEffect(() => {
     if (!selectedAdmin) return;
 
+    selectedAdminRef.current = selectedAdmin;
+
     const loadMessages = async () => {
       setLoading(true);
       try {
         const res = await getPersonalMessages(selectedAdmin._id);
         setMessages(res.data || []);
-      } catch {
+      } catch (err) {
+        console.error("Failed to load messages", err);
         setMessages([]);
       } finally {
         setLoading(false);
@@ -56,11 +98,23 @@ const Chat = () => {
     e.preventDefault();
     if (!input.trim() || !selectedAdmin) return;
 
-    await sendPersonalMessage(selectedAdmin._id, input);
-    setInput("");
+    try {
+      const text = input;
+      setInput("");
 
-    const res = await getPersonalMessages(selectedAdmin._id);
-    setMessages(res.data || []);
+      const res = await sendPersonalMessage(selectedAdmin._id, text);
+
+      const created = res?.data;
+      if (created?._id) {
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === created._id)) return prev;
+          return [...prev, created];
+        });
+      }
+      // socket will update UI
+    } catch (err) {
+      console.error("Failed to send message", err);
+    }
   };
 
   return (
@@ -215,7 +269,7 @@ const Chat = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" type="submit">
             <Send size={18} />
           </button>
         </form>

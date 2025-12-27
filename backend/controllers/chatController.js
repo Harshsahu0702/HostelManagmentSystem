@@ -11,20 +11,12 @@ const Admin = require("../models/Admin");
 exports.sendPersonalMessage = async (req, res) => {
   try {
     const { receiverId, text } = req.body;
-    const { id, role, hostelId } = req.user; // role: "student" | "admin"
+    const { id, role, hostelId } = req.user;
 
     if (!receiverId || !text) {
       return res.status(400).json({
         success: false,
         message: "receiverId and text are required",
-      });
-    }
-
-    // ❌ Block student ↔ student & admin ↔ admin
-    if (role !== "student" && role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid role",
       });
     }
 
@@ -37,6 +29,12 @@ exports.sendPersonalMessage = async (req, res) => {
       receiverId,
       text,
     });
+
+    // 🔥 REAL-TIME EMIT (to receiver)
+    req.io.to(receiverId.toString()).emit("personalMessage", message);
+
+    // 🔥 ALSO emit to sender (for multi-tab support)
+    req.io.to(id.toString()).emit("personalMessage", message);
 
     res.status(201).json({
       success: true,
@@ -103,6 +101,9 @@ exports.sendGroupMessage = async (req, res) => {
       senderId: id,
       text,
     });
+
+    // 🔥 REAL-TIME EMIT (to hostel room)
+    req.io.to(hostelId.toString()).emit("groupMessage", message);
 
     res.status(201).json({
       success: true,
