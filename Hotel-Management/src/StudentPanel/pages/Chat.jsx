@@ -24,14 +24,11 @@ const Chat = () => {
         const res = await getAdminsForChat();
         const list = res.data || [];
         setAdmins(list);
-        if (list.length > 0) {
-          setSelectedAdmin(list[0]); // default select first admin
-        }
+        if (list.length > 0) setSelectedAdmin(list[0]);
       } catch (err) {
         console.error("Failed to load admins", err);
       }
     };
-
     loadAdmins();
   }, []);
 
@@ -44,8 +41,7 @@ const Chat = () => {
       try {
         const res = await getPersonalMessages(selectedAdmin._id);
         setMessages(res.data || []);
-      } catch (err) {
-        console.error("Failed to load messages", err);
+      } catch {
         setMessages([]);
       } finally {
         setLoading(false);
@@ -60,17 +56,11 @@ const Chat = () => {
     e.preventDefault();
     if (!input.trim() || !selectedAdmin) return;
 
-    try {
-      await sendPersonalMessage(selectedAdmin._id, input);
-      setInput("");
+    await sendPersonalMessage(selectedAdmin._id, input);
+    setInput("");
 
-      // reload messages
-      const res = await getPersonalMessages(selectedAdmin._id);
-      setMessages(res.data || []);
-    } catch (err) {
-      console.error("Failed to send message", err);
-      alert("Failed to send message");
-    }
+    const res = await getPersonalMessages(selectedAdmin._id);
+    setMessages(res.data || []);
   };
 
   return (
@@ -79,102 +69,157 @@ const Chat = () => {
       style={{
         height: "calc(100vh - 180px)",
         display: "flex",
-        flexDirection: "column",
         padding: 0,
       }}
     >
-      {/* HEADER */}
+      {/* ================= LEFT: ADMIN LIST ================= */}
       <div
         style={{
-          padding: "16px",
-          borderBottom: "1px solid var(--border)",
-          fontWeight: 700,
-        }}
-      >
-        {selectedAdmin
-          ? `Chat with ${selectedAdmin.name}`
-          : "Select an Admin"}
-      </div>
-
-      {/* MESSAGES */}
-      <div
-        style={{
-          flex: 1,
-          padding: "20px",
-          background: "#f8fafc",
+          width: 260,
+          borderRight: "1px solid var(--border)",
           overflowY: "auto",
         }}
       >
-        {loading && <div>Loading chat...</div>}
+        <div
+          style={{
+            padding: "12px 16px",
+            fontWeight: 700,
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          Admins
+        </div>
 
-        {messages.map((m) => {
-          const isMe =
-            m.senderType === "student" &&
-            String(m.senderId) === String(student?._id);
-
-          return (
-            <div
-              key={m._id}
-              style={{
-                display: "flex",
-                justifyContent: isMe ? "flex-end" : "flex-start",
-                marginBottom: "16px",
-              }}
-            >
-              <div
-                style={{
-                  padding: "12px",
-                  background: isMe ? "var(--primary)" : "#fff",
-                  color: isMe ? "#fff" : "#000",
-                  borderRadius: "12px",
-                  fontSize: "0.9rem",
-                  maxWidth: "70%",
-                }}
-              >
-                <div style={{ marginBottom: 6 }}>{m.text}</div>
-                <div
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "var(--text-muted)",
-                    textAlign: "right",
-                  }}
-                >
-                  {m.createdAt
-                    ? new Date(m.createdAt).toLocaleString()
-                    : ""}
-                </div>
-              </div>
+        {admins.map((admin) => (
+          <div
+            key={admin._id}
+            onClick={() => setSelectedAdmin(admin)}
+            style={{
+              padding: "12px 16px",
+              cursor: "pointer",
+              background:
+                selectedAdmin?._id === admin._id
+                  ? "rgba(79,70,229,0.1)"
+                  : "transparent",
+              borderLeft:
+                selectedAdmin?._id === admin._id
+                  ? "4px solid var(--primary)"
+                  : "4px solid transparent",
+            }}
+          >
+            <div style={{ fontWeight: 600 }}>{admin.name}</div>
+            <div style={{ fontSize: "0.8rem", color: "#666" }}>
+              {admin.role || "Admin"}
             </div>
-          );
-        })}
+          </div>
+        ))}
 
-        {messages.length === 0 && !loading && (
-          <div style={{ textAlign: "center", color: "#777" }}>
-            No messages yet
+        {admins.length === 0 && (
+          <div style={{ padding: 16, color: "#777" }}>
+            No admins found
           </div>
         )}
       </div>
 
-      {/* INPUT */}
-      <form
-        onSubmit={handleSend}
+      {/* ================= RIGHT: CHAT ================= */}
+      <div
         style={{
-          padding: "16px",
-          borderTop: "1px solid var(--border)",
+          flex: 1,
           display: "flex",
-          gap: "10px",
+          flexDirection: "column",
         }}
       >
-        <input
-          className="form-control"
-          placeholder="Type a message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button className="btn btn-primary" type="submit">
-          <Send size={18} />
-        </button>
-      </form>
+        {/* HEADER */}
+        <div
+          style={{
+            padding: "16px",
+            borderBottom: "1px solid var(--border)",
+            fontWeight: 700,
+          }}
+        >
+          {selectedAdmin
+            ? `Chat with ${selectedAdmin.name}`
+            : "Select an Admin"}
+        </div>
+
+        {/* MESSAGES */}
+        <div
+          style={{
+            flex: 1,
+            padding: "20px",
+            background: "#f8fafc",
+            overflowY: "auto",
+          }}
+        >
+          {loading && <div>Loading chat...</div>}
+
+          {messages.map((m) => {
+            const isMe =
+              m.senderType === "student" &&
+              String(m.senderId) === String(student?._id);
+
+            return (
+              <div
+                key={m._id}
+                style={{
+                  display: "flex",
+                  justifyContent: isMe ? "flex-end" : "flex-start",
+                  marginBottom: 16,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "12px",
+                    background: isMe ? "var(--primary)" : "#fff",
+                    color: isMe ? "#fff" : "#000",
+                    borderRadius: 12,
+                    maxWidth: "70%",
+                  }}
+                >
+                  <div>{m.text}</div>
+                  <div
+                    style={{
+                      fontSize: "0.7rem",
+                      marginTop: 4,
+                      opacity: 0.7,
+                      textAlign: "right",
+                    }}
+                  >
+                    {new Date(m.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {messages.length === 0 && !loading && (
+            <div style={{ textAlign: "center", color: "#777" }}>
+              No messages yet
+            </div>
+          )}
+        </div>
+
+        {/* INPUT */}
+        <form
+          onSubmit={handleSend}
+          style={{
+            padding: "16px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            gap: 10,
+          }}
+        >
+          <input
+            className="form-control"
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button className="btn btn-primary">
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
